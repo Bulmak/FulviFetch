@@ -1,0 +1,16 @@
+{
+  "manifest_version": 3,
+  "name": "Audio local · Prototipo",
+  "version": "0.1.1",
+  "description": "Descarga experimental de audio público de YouTube, dentro de Firefox.",
+  "permissions": ["downloads", "webRequest", "webRequestBlocking"],
+  "host_permissions": ["https://www.youtube.com/*", "https://youtubei.googleapis.com/*", "https://*.googlevideo.com/*"],
+  "background": {"scripts": ["background.js"]},
+  "action": {"default_title": "Abrir descargador de audio"},
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; frame-src 'none'; connect-src 'self' https://www.youtube.com https://youtubei.googleapis.com https://*.googlevideo.com"
+  },
+  "browser_specific_settings": {
+    "gecko": {"id": "audio-local@bulmak.local", "strict_min_version": "142.0", "data_collection_permissions": {"required": ["none"]}}
+  }
+}

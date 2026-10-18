@@ -1,4 +1,11 @@
-# Descargar audio con Python
+# Extension_MP3
+
+El prototipo independiente para Firefox está en [extension/](extension/README.md).
+La primera etapa permite descargar el audio original de videos públicos, sin
+Python ni programas auxiliares. Consulta [las pruebas realizadas](extension/VERIFICACION.md)
+y el [plan de desarrollo](PLAN_EXTENSION.md).
+
+## Descargar audio con Python
 
 Este ejemplo pide un enlace, descarga un solo video y convierte su audio a MP3.
 Los archivos se guardan en `audio`, junto al programa.
@@ -53,8 +60,4 @@ Si un sitio cambia y la descarga deja de funcionar, actualiza yt-dlp:
 
 Documentacion de yt-dlp: https://github.com/yt-dlp/yt-dlp.
 
-Este ejemplo todavia no se ha ejecutado. Desde la sesion de Codex, Python muestra
-su version, pero al ejecutar codigo falla al cargar el modulo `encodings`.
-Comprueba el comando de creacion del entorno en tu propia terminal para determinar
-si el problema tambien ocurre fuera de esta sesion. FFmpeg sigue pendiente de
-verificacion.
+El usuario verifico este ejemplo descargando un MP3. FFmpeg y FFprobe tambien se comprobaron en este equipo.

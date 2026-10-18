@@ -1,0 +1,22 @@
+{
+  "name": "extension-mp3",
+  "version": "0.1.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc --noEmit && vite build && node scripts/notices.mjs",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "lint:extension": "web-ext lint --source-dir dist --warnings-as-errors",
+    "package": "npm run build && web-ext build --source-dir dist --artifacts-dir artifacts --overwrite-dest"
+  },
+  "dependencies": {
+    "youtubei.js": "18.2.0"
+  },
+  "devDependencies": {
+    "@types/firefox-webext-browser": "143.0.1",
+    "typescript": "7.0.2",
+    "vite": "8.3.4",
+    "web-ext": "10.8.0",
+    "selenium-webdriver": "4.51.0"
+  }
+}
