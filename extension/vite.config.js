@@ -3,5 +3,11 @@ const packageInfo = JSON.parse(readFileSync(new URL('./package.json', import.met
 export default {
   base: './',
   define: {__APP_VERSION__: JSON.stringify(packageInfo.version)},
-  build: {target: 'firefox142', sourcemap: false, minify: false}
+  build: {
+    target: 'firefox142', sourcemap: false, minify: false,
+    rollupOptions: {
+      input: {popup: 'index.html', background: 'src/background.ts'},
+      output: {entryFileNames: chunk => chunk.name === 'background' ? 'background.js' : 'assets/[name]-[hash].js'}
+    }
+  }
 };

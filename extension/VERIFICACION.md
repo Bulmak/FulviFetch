@@ -146,3 +146,60 @@ la descarga original; la conversión a MP3 en el navegador sigue pendiente.
 
 El comprobador de Firefox acepta identificadores y enlaces completos. Los audios,
 capturas y diagnósticos se guardan en `.test-artifacts/`, excluido de Git.
+
+## Actualización 0.2.0: popup y descarga en segundo plano
+
+Fecha: 19 de octubre de 2026.
+
+El botón de la extensión abre un popup de 390 px en la barra de Firefox.
+No crea una pestaña. Permite pegar un enlace o utilizar el video de la pestaña
+activa. El proceso de fondo gestiona una tarea para toda la extensión, su
+cancelación y el guardado. El popup muestra progreso y recupera el estado al
+volver a abrirse. El botón presenta actividad y una marca al terminar.
+
+Cambios relevantes:
+
+- Vite compila dos entradas: interfaz y proceso de fondo.
+- El controlador de tarea evita descargas simultáneas y conserva diagnósticos.
+- Los estados se escriben en orden en storage.session. Una interrupción del
+  proceso no se presenta como una descarga que sigue activa.
+- Se añadieron storage y activeTab. No se ampliaron los dominios de red.
+- No se necesita mantener una pestaña abierta ni un servidor auxiliar.
+- La conversión a MP3 sigue pendiente; los archivos guardados son originales.
+
+Comprobaciones:
+
+- 33 pruebas unitarias aprobadas, incluidas aislamiento de la interfaz,
+  concurrencia, cancelación y recuperación del estado.
+- TypeScript, compilación, empaquetado y web-ext lint completados; la validación
+  de la extensión no reportó errores, advertencias ni avisos.
+- Popup nativo abierto desde el botón de la barra en Firefox 158.0, perfil nuevo.
+  Detección del video activo y ausencia de desbordamiento horizontal verificadas.
+- Descargas reales de jNQXAC9IVRw (309288 bytes) y llmbcMmZuQ4 (3308972 bytes),
+  cerrando el popup durante 2,5 segundos y recuperando el resultado al reabrirlo.
+- Enlace de otro dominio rechazado y cancelación comprobada desde el popup.
+- Prueba larga con aqz-KE-bpKQ: 10271496 bytes completos. Se añadió una pausa
+  artificial de 5 segundos antes de cada petición de audio y un 403 simulado
+  en el fragmento del byte 1048576, únicamente en una copia del paquete de prueba.
+- El popup permaneció cerrado durante 36 segundos, sin consultar el proceso
+  desde la interfaz. Al reabrirlo seguía descargando y había recibido 6291456
+  bytes. Renovó el acceso una vez y terminó la descarga.
+- Se conservó el tiempo de suspensión nativo de Firefox: 30000 ms. No se
+  modificaron las preferencias del navegador personal ni del paquete distribuido.
+- El archivo de esa prueba coincide en SHA-256 con los resultados anteriores:
+  A38931B7ADE66F99FDCA01A1BF8383321142D6673544CD9A0309CC0851C336F0.
+- El número de pestañas se mantuvo en uno durante todas las pruebas del popup.
+- Se inspeccionaron capturas del popup inicial y después de guardar.
+
+Una prueba de estrés adicional redujo la suspensión a 2 segundos e introdujo
+pausas artificiales de 5 segundos: el proceso se suspendió. Una promesa de
+mensajería pendiente por sí sola no garantiza mantenerlo vivo indefinidamente.
+El diseño final confirma el inicio inmediatamente y utiliza la actividad real
+de las peticiones y del progreso, con esperas de red de 15/20 segundos, por debajo
+de los 30 segundos nativos. Se verificó la transferencia lenta y su recuperación
+con ese comportamiento real del navegador.
+
+Cerrar Firefox, recargar o desactivar la extensión sigue interrumpiendo las
+tareas. No se implementó reanudación después de esas operaciones. El estado
+de sesión se descarta al reiniciar Firefox. La compatibilidad fuera de Firefox
+de escritorio y la firma del XPI siguen pendientes.

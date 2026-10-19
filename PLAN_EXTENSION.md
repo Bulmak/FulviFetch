@@ -1,7 +1,7 @@
 # Plan de la extensión de descarga de audio
 
 Fecha: 15 de octubre de 2026.
-Estado: etapa 1 implementada y validada el 18 de octubre de 2026. Ver `extension/VERIFICACION.md`.
+Estado: etapa 1 validada; popup y descarga en segundo plano implementados el 19 de octubre de 2026. Ver `extension/VERIFICACION.md`.
 
 ## 1. Objetivo acordado
 
@@ -73,10 +73,9 @@ Enlace pegado o pestaña actual
     -> Guardado con el gestor de descargas del navegador
 ```
 
-Las tareas largas vivirán en una página propia de la extensión. El menú de la
-barra servirá como acceso: cerrarlo no deberá cancelar la descarga. La primera
-versión podrá requerir mantener abierta la página de trabajo; se indicará al
-usuario qué sucede al cerrarla.
+Desde 0.2.0 el botón de la barra abre un popup. La descarga vive en el proceso
+de fondo de Firefox y continúa cuando se cierra el panel. El popup recupera el
+progreso al reabrirse; cerrar Firefox o recargar la extensión interrumpe la tarea.
 
 ## 5. Etapas y criterios de avance
 
@@ -115,13 +114,13 @@ elegirlo. No se usarán los `.exe` de Windows dentro del navegador.
 
 ### Etapa 3: construir el flujo de uso
 
-- [ ] Añadir acceso desde el botón de la extensión.
-- [ ] Permitir pegar un enlace o tomarlo de la pestaña actual al pulsar el botón.
+- [x] Añadir acceso desde el botón de la extensión.
+- [x] Permitir pegar un enlace o tomarlo de la pestaña actual al pulsar el botón.
 - [ ] Mostrar título, duración y formato cuando estén disponibles.
 - [ ] Ofrecer formato original o MP3 y un nombre de salida editable.
 - [ ] Mostrar estados: obteniendo información, descargando, convirtiendo y listo.
-- [ ] Mostrar porcentaje solo cuando exista un total conocido.
-- [ ] Permitir cancelar y volver a intentar sin duplicar tareas.
+- [x] Mostrar porcentaje solo cuando exista un total conocido.
+- [x] Permitir cancelar y volver a intentar sin duplicar tareas.
 - [ ] Mostrar errores concretos y una acción útil para cada caso.
 
 Criterio de avance: completar el flujo sin abrir terminales ni ajustar rutas del
@@ -178,7 +177,7 @@ La compatibilidad de WebCodecs y los límites de memoria deben verificarse apart
 | Enlace inválido o de otro dominio | Rechazo antes de iniciar peticiones innecesarias |
 | Conexión interrumpida o URL caducada | Error recuperable, sin archivo presentado como correcto |
 | Cancelación durante descarga o conversión | Tarea detenida y recursos liberados |
-| Cierre del menú pequeño | La página de trabajo mantiene la tarea |
+| Cierre del popup | El proceso de fondo mantiene la tarea y el panel recupera su estado |
 | Recorte de 3.5 a 16 segundos | Fragmento esperado y original conservado |
 | Instalación en un perfil limpio | Solo extensión y sus permisos |
 

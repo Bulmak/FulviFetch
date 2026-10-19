@@ -3,23 +3,25 @@
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Audio local</title></head>
 <body>
   <main>
-    <p class="eyebrow">PROTOTIPO · FIREFOX · <span id="build-version"></span></p>
-    <h1>Audio local</h1>
-    <p class="intro">Pega un enlace público de YouTube y guarda su audio original en tu equipo.</p>
+    <header>
+      <img src="/icons/audio.svg" width="38" height="38" alt="">
+      <div><h1>Audio local</h1><p>Tu música, en tu equipo.</p></div>
+      <span class="version" id="build-version"></span>
+    </header>
     <form id="download-form">
-      <label for="url">Enlace del video</label>
-      <input id="url" type="url" required autocomplete="off" placeholder="https://www.youtube.com/watch?v=…">
-      <div class="actions"><button id="download" type="submit">Descargar audio</button><button id="cancel" type="button" disabled>Cancelar</button></div>
+      <div class="field-heading"><label for="url">Enlace de YouTube</label><button id="current-video" type="button">Usar video actual</button></div>
+      <input id="url" type="url" required autocomplete="off" placeholder="Pega el enlace de un video">
+      <p id="track-title" hidden></p>
+      <div class="actions"><button id="download" type="submit">Descargar audio <span aria-hidden="true">↓</span></button><button id="cancel" type="button" disabled>Cancelar</button></div>
     </form>
-    <section aria-live="polite" aria-atomic="false">
-      <h2 id="status">Listo para comenzar</h2>
-      <p id="detail">Esta versión guarda M4A o WebM. La conversión a MP3 llegará después.</p>
-      <progress id="progress" hidden></progress>
-      <ol id="events" aria-label="Estado de la descarga"></ol>
+    <section id="result" aria-live="polite" aria-atomic="false" data-result="idle">
+      <div class="status-heading"><span class="status-dot" aria-hidden="true"></span><h2 id="status">Conectando…</h2></div>
+      <p id="detail">Recuperando el estado de la descarga.</p>
+      <progress id="progress" hidden aria-label="Progreso de descarga"></progress>
     </section>
-    <p class="note">Mantén esta página abierta hasta terminar. No necesitas reproducir el video. Solo videos públicos, sin iniciar sesión. Límite inicial: 64 MiB por archivo.</p>
-    <details><summary>Diagnóstico de esta prueba</summary><p>Solo versión, identificador del video, estados y cantidades. No incluye direcciones del audio, cookies ni tokens.</p><pre id="diagnostic">Sin pruebas todavía.</pre><button id="copy-diagnostic" type="button">Copiar diagnóstico</button></details>
-
+    <p class="note">Puedes cerrar este panel: la descarga continúa mientras Firefox siga abierto.</p>
+    <footer><span>Audio original · M4A / WebM</span><span>Hasta 64 MiB</span></footer>
+    <details><summary>Diagnóstico</summary><p>Sin direcciones del audio, cookies ni tokens.</p><pre id="diagnostic">Sin pruebas todavía.</pre><button id="copy-diagnostic" type="button">Copiar diagnóstico</button></details>
   </main>
   <script type="module" src="/src/app.ts"></script>
 </body>
