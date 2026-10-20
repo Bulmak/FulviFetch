@@ -1,16 +1,50 @@
 {
   "manifest_version": 3,
-  "name": "Audio local · Prototipo",
-  "version": "0.1.1",
+  "name": "FulviFetch",
+  "version": "0.3.2",
   "description": "Descarga experimental de audio público de YouTube, dentro de Firefox.",
-  "permissions": ["downloads", "webRequest", "webRequestBlocking"],
-  "host_permissions": ["https://www.youtube.com/*", "https://youtubei.googleapis.com/*", "https://*.googlevideo.com/*"],
-  "background": {"scripts": ["background.js"]},
-  "action": {"default_title": "Abrir descargador de audio"},
+  "permissions": [
+    "downloads",
+    "webRequest",
+    "webRequestBlocking",
+    "storage",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://youtubei.googleapis.com/*",
+    "https://*.googlevideo.com/*"
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ],
+    "type": "module"
+  },
+  "action": {
+    "default_title": "FulviFetch",
+    "default_popup": "index.html",
+    "default_icon": {
+      "32": "icons/audio.svg",
+      "48": "icons/audio.svg"
+    }
+  },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'none'; frame-src 'none'; connect-src 'self' https://www.youtube.com https://youtubei.googleapis.com https://*.googlevideo.com"
   },
   "browser_specific_settings": {
-    "gecko": {"id": "audio-local@bulmak.local", "strict_min_version": "142.0", "data_collection_permissions": {"required": ["none"]}}
+    "gecko": {
+      "id": "audio-local@bulmak.local",
+      "strict_min_version": "142.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    }
+  },
+  "icons": {
+    "48": "icons/audio.svg",
+    "96": "icons/audio.svg"
   }
 }

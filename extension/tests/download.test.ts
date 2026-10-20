@@ -98,3 +98,17 @@ test('Cancelar durante la renovación evita reanudar la transferencia', async t 
   await assert.rejects(downloadAudio({...candidate, refresh: async () => { controller.abort(new DOMException('Cancelado', 'AbortError')); return candidate; }}, controller.signal, () => {}), {name: 'AbortError'});
   assert.equal(request.mock.callCount(), 1);
 });
+test('Normaliza espacios Unicode del título que Firefox rechaza al guardar', () => {
+  const title = 'Modern Talking - Brother Louie (Official\u00a0Video)';
+  assert.equal(filenameFor(title, 'Lp2qcCrdBLA', 'm4a'),
+    'FulviFetch/Modern Talking - Brother Louie (Official Video) [Lp2qcCrdBLA].m4a');
+  for (const whitespace of ['\u00a0', '\u202f', '\u2007', '\u3000']) {
+    assert.equal(filenameFor('Tema' + whitespace + 'musical', id, 'm4a'),
+      'FulviFetch/Tema musical [' + id + '].m4a');
+  }
+});
+
+test('Normalizar espacios conserva acentos y títulos en otros idiomas', () => {
+  assert.equal(filenameFor('Canción\u00a0日本語', id, 'm4a'),
+    'FulviFetch/Canción 日本語 [' + id + '].m4a');
+});

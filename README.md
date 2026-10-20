@@ -1,63 +1,53 @@
-# Extension_MP3
+# FulviFetch
 
-El prototipo independiente para Firefox está en [extension/](extension/README.md).
-La primera etapa permite descargar el audio original de videos públicos, sin
-Python ni programas auxiliares. Consulta [las pruebas realizadas](extension/VERIFICACION.md)
-y el [plan de desarrollo](PLAN_EXTENSION.md).
+Extensión para Firefox que descarga el audio de videos públicos de YouTube desde
+un popup en la barra de herramientas. Versión actual: **0.3.2**.
 
-## Descargar audio con Python
+Funciona dentro del navegador: no requiere Python, FFmpeg, programas auxiliares
+ni un servidor. Guarda M4A/AAC o WebM; la conversión a MP3 y los recortes siguen
+pendientes.
 
-Este ejemplo pide un enlace, descarga un solo video y convierte su audio a MP3.
-Los archivos se guardan en `audio`, junto al programa.
+## Probar la extensión
 
-## Preparacion en Windows
+1. Abre `about:debugging#/runtime/this-firefox` en Firefox de escritorio.
+2. Pulsa **Cargar complemento temporal** y selecciona
+   `extension/dist/manifest.json`.
+3. Abre **FulviFetch** desde la barra, pega el enlace y pulsa
+   **Descargar audio**.
 
-1. Python 3.14.3 esta instalado en `C:\Python314\python.exe`.
-   Abre una nueva terminal y comprueba `& 'C:\Python314\python.exe' --version`.
-   Si necesitas reinstalarlo: https://www.python.org/downloads/windows/.
-2. Descarga una compilacion para Windows de FFmpeg desde los enlaces de
-   https://ffmpeg.org/download.html. Extrae `ffmpeg.exe` y `ffprobe.exe`
-   de la carpeta `bin` y copialos a `E:\Extension_MP3\tools`.
-   FFmpeg es un programa externo: instalar un paquete Python llamado ffmpeg
-   no sustituye estos ejecutables.
-3. Para el soporte completo de YouTube, instala Deno y comprueba
-   `deno --version` en una nueva terminal. Consulta las instrucciones
-   oficiales: https://docs.deno.com/runtime/getting_started/installation/.
-   yt-dlp detecta Deno desde PATH.
-4. En PowerShell, ejecuta:
+Si ya la tienes instalada, pulsa **Recargar**. Puedes cerrar el popup durante la
+descarga. La instalación temporal desaparece al reiniciar Firefox.
 
-```powershell
-cd E:\Extension_MP3
-& 'C:\Python314\python.exe' -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -U -r requirements.txt
-.\.venv\Scripts\python.exe descargar_audio.py
-```
+Consulta la [guía de instalación y desarrollo](extension/README.md) para los
+permisos, requisitos y límites del prototipo.
 
-No necesitas activar el entorno: usamos directamente su ejecutable.
+## Organización
 
-## Como funciona
+| Carpeta | Contenido |
+| --- | --- |
+| [extension/](extension/) | Código, pruebas y configuración de la extensión |
+| `docs/` (solo local) | Plan, resultados de verificación y sugerencias |
+| `.local/audio/` | Audios personales y archivos de comparación conservados en este equipo |
+| `.local/tools/` | Herramientas opcionales para pruebas de desarrollo |
 
-- `input` lee el enlace que pegas.
-- `Path` construye la ruta de salida y crea la carpeta `audio`.
-- `opciones` es un diccionario con la configuracion de yt-dlp.
-- `format` selecciona el mejor audio disponible; `best` es una alternativa
-  para sitios que solo ofrecen audio junto al video.
-- `outtmpl` usa el titulo y el identificador del video como nombre.
-- `noplaylist` evita descargar una lista completa al pegar un enlace de video.
-- `postprocessors` indica a FFmpeg que extraiga o convierta el audio a MP3
-  con una tasa objetivo de 192 kb/s. Convertir no mejora la calidad original.
-- `YoutubeDL` crea el descargador; `download([url])` inicia la descarga.
-- `try/except` muestra un mensaje si la descarga falla.
-- `if __name__ == "__main__"` inicia el programa cuando ejecutas el archivo.
+`docs/` y `.local/` están excluidos de Git. Las herramientas de esa carpeta se usan para
+comprobar el prototipo durante el desarrollo; no forman parte de la extensión.
 
-## Actualizar
+Dentro de `extension/`, `src/` contiene el código, `public/` el manifiesto y los
+iconos, `tests/` las pruebas, `scripts/` la automatización y `licenses/` los avisos
+auxiliares. `node_modules/`, `dist/`, `artifacts/` y `.test-artifacts/` son carpetas
+locales generadas, excluidas de Git.
 
-Si un sitio cambia y la descarga deja de funcionar, actualiza yt-dlp:
+## Desarrollo
+
+Se necesita Node.js para compilar y probar el proyecto:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install -U -r requirements.txt
+cd extension
+npm.cmd ci
+npm.cmd test
+npm.cmd run package
+npm.cmd run lint:extension
 ```
 
-Documentacion de yt-dlp: https://github.com/yt-dlp/yt-dlp.
-
-El usuario verifico este ejemplo descargando un MP3. FFmpeg y FFprobe tambien se comprobaron en este equipo.
+El empaquetado genera `extension/dist/` y el ZIP en `extension/artifacts/`.
