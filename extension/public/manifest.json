@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "Audio local · Prototipo",
-  "version": "0.3.1",
+  "name": "FulviFetch",
+  "version": "0.3.2",
   "description": "Descarga experimental de audio público de YouTube, dentro de Firefox.",
   "permissions": [
     "downloads",
@@ -22,7 +22,7 @@
     "type": "module"
   },
   "action": {
-    "default_title": "Audio local",
+    "default_title": "FulviFetch",
     "default_popup": "index.html",
     "default_icon": {
       "32": "icons/audio.svg",

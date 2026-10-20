@@ -79,7 +79,7 @@ export class DownloadTask {
       signal.throwIfAborted();
       Object.assign(this.state.diagnostic, metadata);
       this.state.status = 'Audio guardado'; this.state.diagnostic.result = 'complete';
-      updates.report('Encontrarás el archivo en Audio local, dentro de tus descargas.');
+      updates.report('Encontrarás el archivo en FulviFetch, dentro de tus descargas.');
     } catch (error) {
       this.state.diagnostic.phase = this.state.status;
       this.state.diagnostic.received = this.state.received;

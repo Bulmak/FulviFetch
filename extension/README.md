@@ -1,7 +1,7 @@
-# Audio local: prototipo para Firefox
+# FulviFetch: prototipo para Firefox
 
 Extensión independiente para descargar el audio original de videos públicos de
-YouTube. La versión 0.3.1 se usa desde un popup en la barra de herramientas.
+YouTube. La versión 0.3.2 se usa desde un popup en la barra de herramientas.
 
 ## Instalar o actualizar la prueba
 
@@ -11,16 +11,16 @@ El paquete ya está preparado en este computador.
 2. Si tienes la versión anterior, cierra sus pestañas y quita el complemento temporal.
 3. Pulsa **Cargar complemento temporal** y selecciona
    `E:\Extension_MP3\extension\dist\manifest.json`.
-4. Abre el menú de extensiones, localiza **Audio local · Prototipo** y fija su
+4. Abre el menú de extensiones, localiza **FulviFetch** y fija su
    botón a la barra de herramientas si quieres tenerlo siempre visible.
 5. Pulsa el icono: se abre un panel pequeño, sin crear una pestaña.
 6. Pega un enlace o pulsa **Usar video actual**, y después **Descargar audio**.
 7. Puedes cerrar y volver a abrir el panel: la tarea continúa en segundo plano.
 
-También puedes seleccionar `artifacts/audio_local_prototipo-0.3.1.zip` desde el
-diálogo de carga temporal. Comprueba que el panel muestre **0.3.1**.
+También puedes seleccionar `artifacts/fulvifetch-0.3.2.zip` desde el
+diálogo de carga temporal. Comprueba que el panel muestre **0.3.2**.
 
-El archivo se guarda en `Audio local`, dentro de las descargas de Firefox.
+El archivo se guarda en `FulviFetch`, dentro de las descargas de Firefox.
 Puede aparecer un diálogo de guardado según tu configuración. No necesitas
 reproducir el video. El botón muestra un indicador durante la descarga y una
 marca al terminar; el panel recupera el progreso o el último resultado.

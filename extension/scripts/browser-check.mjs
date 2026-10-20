@@ -18,7 +18,7 @@ const deniedOffset = process.env.SIMULATE_MEDIA_403_AT === undefined ? null : Nu
 assert.ok(Number.isFinite(delay) && delay >= 0 && delay <= 10000);
 assert.ok(Number.isFinite(closeMs) && closeMs >= 0 && closeMs <= 55000);
 const manifest = JSON.parse(await readFile(resolve(root, 'dist/manifest.json'), 'utf8'));
-let archive = resolve(root, 'artifacts', 'audio_local_prototipo-' + manifest.version + '.zip');
+let archive = resolve(root, 'artifacts', 'fulvifetch-' + manifest.version + '.zip');
 if (delay || deniedOffset !== null) {
   const source = resolve(output, 'instrumented-popup');
   await cp(resolve(root, 'dist'), source, {recursive: true});
@@ -36,7 +36,7 @@ if (delay || deniedOffset !== null) {
   const cli = resolve(root, 'node_modules/web-ext/bin/web-ext.js');
   const build = spawnSync(process.execPath, [cli, 'build', '--source-dir', source, '--artifacts-dir', resolve(output, 'instrumented-package'), '--overwrite-dest'], {encoding: 'utf8', windowsHide: true});
   if (build.status !== 0) throw new Error(build.stdout + build.stderr);
-  archive = resolve(output, 'instrumented-package', 'audio_local_prototipo-' + manifest.version + '.zip');
+  archive = resolve(output, 'instrumented-package', 'fulvifetch-' + manifest.version + '.zip');
 }
 const options = new firefox.Options()
   .setBinary(process.env.FIREFOX_BIN || 'C:\\Program Files\\Mozilla Firefox\\firefox.exe')

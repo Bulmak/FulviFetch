@@ -36,7 +36,7 @@ export function extensionForMime(mime: string): 'm4a' | 'webm' {
 }
 export function filenameFor(title: string, id: string, extension: string): string {
   const clean = title.normalize('NFC').replace(/\s/gu, ' ').replace(/[<>:"/\\|?*\u0000-\u001f\u007f]/g, '_').replace(/^[. ]+|[. ]+$/g, '').slice(0, 120).replace(/[. ]+$/g, '');
-  return `Audio local/${clean || 'Audio'} [${id}].${extension}`;
+  return `FulviFetch/${clean || 'Audio'} [${id}].${extension}`;
 }
 export function checkSize(value: number): number {
   if (!Number.isSafeInteger(value) || value <= 0) throw new DownloadFailure('UNKNOWN_SIZE', 'No se pudo determinar el tamaño completo del audio.');

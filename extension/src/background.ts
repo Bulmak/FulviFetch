@@ -15,7 +15,7 @@ function publish(state: TaskState) {
     await Promise.all([
       browser.action.setBadgeText({text}),
       browser.action.setBadgeBackgroundColor({color: result === 'failed' ? '#b43b54' : '#245ea8'}),
-      browser.action.setTitle({title: state.active ? 'Audio local · ' + state.status : 'Audio local'})
+      browser.action.setTitle({title: state.active ? 'FulviFetch · ' + state.status : 'FulviFetch'})
     ]);
   });
   void persistence.catch(() => undefined);
