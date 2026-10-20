@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {DownloadFailure} from '../src/core.ts';
 import {DownloadTask, type TaskUpdates} from '../src/task.ts';
 const url = 'https://www.youtube.com/watch?v=jNQXAC9IVRw';
 function deferred<T>() {
@@ -60,4 +61,20 @@ test('Un enlace inválido no inicia ni modifica la tarea', () => {
   const task = new DownloadTask('test', async () => { calls++; return {}; });
   assert.throws(() => task.start('https://example.com/video'), {code: 'INVALID_URL'});
   assert.equal(calls, 0); assert.equal(task.snapshot().diagnostic.result, 'idle');
+});
+
+test('Un error al guardar conserva su fase y no se presenta como un fallo de red', async () => {
+  const task = new DownloadTask('test', async (_id, _signal, updates) => {
+    updates.progress(100, 100);
+    updates.phase('Guardando el archivo');
+    throw new DownloadFailure('SAVE_FAILED', 'Firefox no pudo guardar el audio.');
+  });
+  const state = await task.start(url);
+  assert.equal(state.active, false);
+  assert.equal(state.diagnostic.result, 'failed');
+  assert.equal(state.diagnostic.code, 'SAVE_FAILED');
+  assert.equal(state.diagnostic.phase, 'Guardando el archivo');
+  assert.equal(state.diagnostic.received, 100);
+  assert.equal(state.diagnostic.total, 100);
+  assert.equal(state.detail, 'Firefox no pudo guardar el audio.');
 });

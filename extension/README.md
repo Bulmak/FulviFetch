@@ -1,7 +1,7 @@
 # Audio local: prototipo para Firefox
 
 Extensión independiente para descargar el audio original de videos públicos de
-YouTube. La versión 0.2.0 se usa desde un popup en la barra de herramientas.
+YouTube. La versión 0.3.1 se usa desde un popup en la barra de herramientas.
 
 ## Instalar o actualizar la prueba
 
@@ -17,8 +17,8 @@ El paquete ya está preparado en este computador.
 6. Pega un enlace o pulsa **Usar video actual**, y después **Descargar audio**.
 7. Puedes cerrar y volver a abrir el panel: la tarea continúa en segundo plano.
 
-También puedes seleccionar `artifacts/audio_local_prototipo-0.2.0.zip` desde el
-diálogo de carga temporal. Comprueba que el panel muestre **0.2.0**.
+También puedes seleccionar `artifacts/audio_local_prototipo-0.3.1.zip` desde el
+diálogo de carga temporal. Comprueba que el panel muestre **0.3.1**.
 
 El archivo se guarda en `Audio local`, dentro de las descargas de Firefox.
 Puede aparecer un diálogo de guardado según tu configuración. No necesitas
@@ -33,12 +33,17 @@ Se requiere Firefox 142 o posterior; se probó en Firefox 158.0 sobre Windows.
 
 - Un video y una descarga activa para toda la extensión, aunque haya varios paneles.
 - Detección del video de la pestaña activa al abrir el panel o pulsar su botón.
-- Audio original: se prefiere M4A/AAC y se admite WebM.
+- Se prefiere M4A/AAC: se reempaqueta localmente para mejorar su reproducción,
+  conservando los paquetes AAC sin recodificar. WebM se guarda sin ese paso.
 - Transferencia por fragmentos, comprobación de rangos e integridad y cancelación.
+- Alternativa iOS si el primer cliente no ofrece audio; verificada con un video
+  marcado para niños. No garantiza compatibilidad con todos esos videos.
 - Renovación limitada de URLs rechazadas por HTTP 403/410.
 - Diagnóstico copiable sin direcciones del audio, cookies ni tokens.
 - Solo videos públicos accesibles sin cuenta; no se admiten directos.
-- Límite provisional de 64 MiB. No convierte a MP3 ni recorta todavía.
+- Límite provisional de 64 MiB tanto al descargar como al preparar el archivo.
+  No convierte a MP3 ni recorta todavía. El reempaquetado puede aumentar el tamaño
+  del contenedor aunque el audio comprimido sea idéntico.
 - Cerrar el popup no cancela. Cerrar Firefox, desactivar o recargar la extensión
   interrumpe la tarea; todavía no hay reanudación después de esas operaciones.
 - El último estado se conserva en memoria de sesión del navegador. Si el proceso
@@ -54,6 +59,7 @@ Se requiere Firefox 142 o posterior; se probó en Firefox 158.0 sobre Windows.
 - `src/background.ts`: extracción, descarga, guardado y actualización del icono.
 - `src/extractor.ts`: contexto de visitante, consultas a YouTube y cabeceras.
 - `src/media.ts`: transferencia por fragmentos y verificación del archivo.
+- `src/remux.ts`: reconstrucción del M4A con Mediabunny, sin decodificar audio.
 - `src/core.ts`: validación de enlaces, nombres, tamaños y formatos.
 - `public/manifest.json`: popup, proceso de fondo y permisos.
 - `index.html` y `src/style.css`: estructura y presentación del panel.
@@ -93,7 +99,7 @@ Abre el popup nativo desde la barra, verifica el video actual, cierra y reabre
 el panel durante descargas reales, comprueba archivos guardados, enlaces
 inválidos y cancelación, y verifica que no se hayan abierto pestañas adicionales.
 
-En este equipo Geckodriver está en `../tools/geckodriver/geckodriver.exe` y Firefox
+En este equipo Geckodriver está en `../.local/tools/geckodriver/geckodriver.exe` y Firefox
 en `C:\Program Files\Mozilla Firefox\firefox.exe`. Se pueden configurar sus rutas
 con `GECKODRIVER_BIN` y `FIREFOX_BIN`.
 
@@ -120,12 +126,19 @@ Selenium busca puertos en `127.0.0.1`; no requiere abrir el firewall a redes pú
 
 ## Dependencias y referencias
 
-Se incluye YouTube.js 18.2.0 y sus dependencias. La compilación reúne sus licencias
-en `dist/THIRD_PARTY_NOTICES.txt`. No incluye yt-dlp ni FFmpeg del programa Python.
+Se incluyen YouTube.js 18.2.0 y Mediabunny 1.61.6. La compilación reúne sus licencias
+en `dist/THIRD_PARTY_NOTICES.txt`, accesible desde el apartado de diagnóstico.
+Mediabunny se distribuye bajo MPL-2.0, sin modificar su código fuente. Se incluye
+la licencia y la dirección del paquete original con su fuente. El uso privado
+no exige publicar nuestro código; al distribuir se conservan los avisos y se
+informa cómo obtener la fuente de los componentes MPL.
+No se incluye ni se ejecuta FFmpeg para descargar o preparar el audio.
 
-- [Plan del proyecto](../PLAN_EXTENSION.md).
-- [Resultados de pruebas](VERIFICACION.md).
+- [Plan del proyecto](../docs/PLAN_EXTENSION.md).
+- [Resultados de pruebas](../docs/VERIFICACION.md).
 - [YouTube.js](https://ytjs.dev/guide/getting-started).
+- [Mediabunny: copia de paquetes](https://mediabunny.dev/guide/media-sources).
+- [Mozilla: preguntas sobre MPL-2.0](https://www.mozilla.org/en-US/MPL/2.0/FAQ/).
 - [Mozilla: procesos de fondo](https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Background_scripts).
 - [Mozilla: ciclo de vida y promesas de eventos](https://firefox-source-docs.mozilla.org/toolkit/components/extensions/webextensions/events.html).
 - [Mozilla: instalación temporal](https://extensionworkshop.com/documentation/develop/temporary-installation-in-firefox/).

@@ -48,7 +48,7 @@ const options = new firefox.Options()
   .setPreference('browser.helperApps.neverAsk.saveToDisk', 'audio/mp4,audio/webm,application/octet-stream')
   .setPreference('media.volume_scale', '0.0')
   .setPreference('media.autoplay.default', 5);
-const service = new firefox.ServiceBuilder(process.env.GECKODRIVER_BIN || resolve(root, '..', 'tools/geckodriver/geckodriver.exe')).addArguments('--allow-system-access');
+const service = new firefox.ServiceBuilder(process.env.GECKODRIVER_BIN || resolve(root, '..', '.local', 'tools/geckodriver/geckodriver.exe')).addArguments('--allow-system-access');
 const driver = await new Builder().forBrowser('firefox').setFirefoxOptions(options).setFirefoxService(service).build();
 const results = [];
 const buttonId = 'audio-local_bulmak_local-BAP';

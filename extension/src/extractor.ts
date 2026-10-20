@@ -1,5 +1,5 @@
 import {Innertube, Log, Constants} from 'youtubei.js/cf-worker';
-import {DownloadFailure, extensionForMime, validateMediaUrl} from './core';
+import {DownloadFailure, extensionForMime, validateMediaUrl} from './core.ts';
 import type {Candidate} from './media';
 Log.setLevel(Log.Level.NONE);
 interface PlaybackContext { videoId: string; visitorData: string; clientVersion: string; }
@@ -10,20 +10,21 @@ export async function installRequestHeaders(report: Report): Promise<() => void>
   const extensionRoot = browser.runtime.getURL('');
   let reported = false;
   let mediaReported = false;
-  const pendingMedia = new Map<string, string | undefined>();
+  const pendingMedia = new Map<string, {userAgent?: string; client: string}>();
   const listener = (details: browser.webRequest._OnBeforeSendHeadersDetails): browser.webRequest.BlockingResponse | undefined => {
     if (!details.originUrl?.startsWith(extensionRoot) && !details.documentUrl?.startsWith(extensionRoot)) return;
     const original = details.requestHeaders ?? [];
     const requestClient = new URL(details.url).searchParams.get('c');
-    const client = original.find(header => header.name.toLowerCase() === 'x-youtube-client-name')?.value ?? (requestClient === 'VISIONOS' ? '101' : undefined);
+    const client = original.find(header => header.name.toLowerCase() === 'x-youtube-client-name')?.value ?? (requestClient === 'VISIONOS' ? '101' : requestClient === 'IOS' ? '5' : undefined);
     const headers = original.filter(header => !['origin', 'referer', 'cookie', 'authorization'].includes(header.name.toLowerCase()) && !header.name.toLowerCase().startsWith('sec-fetch-'));
-    if (client === '101') {
+    const userAgent = client === '101' ? Constants.CLIENTS.VISIONOS.USER_AGENT : client === '5' ? Constants.CLIENTS.IOS.USER_AGENT : undefined;
+    if (userAgent) {
       const ua = headers.find(header => header.name.toLowerCase() === 'user-agent');
-      if (ua) ua.value = Constants.CLIENTS.VISIONOS.USER_AGENT;
-      else headers.push({name: 'User-Agent', value: Constants.CLIENTS.VISIONOS.USER_AGENT});
+      if (ua) ua.value = userAgent;
+      else headers.push({name: 'User-Agent', value: userAgent});
     }
     headers.push({name: 'Origin', value: 'https://www.youtube.com'}, {name: 'Referer', value: 'https://www.youtube.com/'});
-    if (new URL(details.url).hostname.endsWith('.googlevideo.com')) pendingMedia.set(details.requestId, client === '101' ? Constants.CLIENTS.VISIONOS.USER_AGENT : undefined);
+    if (new URL(details.url).hostname.endsWith('.googlevideo.com')) pendingMedia.set(details.requestId, {userAgent, client: client === '101' ? 'VISIONOS' : client === '5' ? 'IOS' : 'OTHER'});
     if (!reported) { reported = true; report('Preparando la conexión con YouTube.'); }
     return {requestHeaders: headers};
   };
@@ -32,13 +33,13 @@ export async function installRequestHeaders(report: Report): Promise<() => void>
   }, ['blocking', 'requestHeaders']);
   const finalHeaders = (details: browser.webRequest._OnSendHeadersDetails) => {
     if (!pendingMedia.has(details.requestId)) return;
-    const expectedUA = pendingMedia.get(details.requestId); pendingMedia.delete(details.requestId);
+    const expected = pendingMedia.get(details.requestId)!; pendingMedia.delete(details.requestId);
     const value = (name: string) => details.requestHeaders?.find(header => header.name.toLowerCase() === name)?.value;
     const matches = value('origin') === 'https://www.youtube.com' && value('referer') === 'https://www.youtube.com/'
-      && (!expectedUA || value('user-agent') === expectedUA) && !value('cookie') && !value('authorization');
+      && (!expected.userAgent || value('user-agent') === expected.userAgent) && !value('cookie') && !value('authorization');
     if (!mediaReported || !matches) {
       mediaReported = true;
-      report('Conexión de descarga comprobada.', {headersMatch: matches, mediaClient: expectedUA ? 'VISIONOS' : 'OTHER'});
+      report('Conexión de descarga comprobada.', {headersMatch: matches, mediaClient: expected.client});
     }
   };
   browser.webRequest.onSendHeaders.addListener(finalHeaders, {urls: ['https://*.googlevideo.com/*']}, ['requestHeaders']);
@@ -86,6 +87,9 @@ function sessionFetch(signal: AbortSignal, context: PlaybackContext | null, repo
     let body = init?.body;
     if (requestUrl.pathname === '/youtubei/v1/player' && typeof body === 'string') {
       const data = JSON.parse(body);
+      // Request downloadable playback formats; the default iOS response can
+      // advertise URLs which reject subsequent byte ranges. This is not a token.
+      if (data.context?.client?.clientName === Constants.CLIENTS.IOS.NAME) data.params = '2AMB';
       if (['WEB_EMBEDDED_PLAYER', 'WEB', 'MWEB'].includes(data.context?.client?.clientName)) {
         if (data.context.client.clientName === 'WEB_EMBEDDED_PLAYER') data.context.thirdParty = {embedUrl: 'https://www.youtube.com/'};
         if (context && data.videoId === context.videoId) {
@@ -117,7 +121,8 @@ export async function* audioCandidates(videoId: string, signal: AbortSignal, rep
   });
   let total = 0;
   let unavailable = 0;
-  for (const client of ['VISIONOS', 'WEB_EMBEDDED', 'WEB', 'MWEB'] as const) {
+  const clients = ['VISIONOS', 'IOS', 'WEB_EMBEDDED', 'WEB', 'MWEB'] as const;
+  for (const client of clients) {
     signal.throwIfAborted();
     report('Buscando audio disponible.', {client});
     try {
@@ -156,7 +161,7 @@ export async function* audioCandidates(videoId: string, signal: AbortSignal, rep
       report('No se pudo obtener audio con este método.', {client, code: error instanceof DownloadFailure ? error.code : 'PLAYER_REQUEST_FAILED', error: error instanceof Error ? error.name : 'UNKNOWN'});
     }
   }
-  if (unavailable === 4) throw new DownloadFailure('VIDEO_UNAVAILABLE', 'YouTube indica que el video no está disponible. Prueba otro enlace público.');
+  if (unavailable === clients.length) throw new DownloadFailure('VIDEO_UNAVAILABLE', 'YouTube indica que el video no está disponible. Prueba otro enlace público.');
   throw new DownloadFailure(total ? 'ALL_DOWNLOADS_FAILED' : 'NO_DIRECT_AUDIO', total
     ? 'YouTube ofreció formatos, pero no permitió completar su descarga. Copia el diagnóstico para revisar esta prueba.'
     : 'No se obtuvo audio directo. El video puede requerir acceso con cuenta, tokens o un método todavía no implementado.');

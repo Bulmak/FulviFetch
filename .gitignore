@@ -1,7 +1,4 @@
-.venv/
-audio/
-tools/
-__pycache__/
-*.py[cod]
+docs/
+.local/
 .env
 .env.*

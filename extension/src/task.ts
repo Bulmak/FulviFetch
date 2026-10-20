@@ -81,6 +81,9 @@ export class DownloadTask {
       this.state.status = 'Audio guardado'; this.state.diagnostic.result = 'complete';
       updates.report('Encontrarás el archivo en Audio local, dentro de tus descargas.');
     } catch (error) {
+      this.state.diagnostic.phase = this.state.status;
+      this.state.diagnostic.received = this.state.received;
+      this.state.diagnostic.total = this.state.total;
       this.state.status = signal.aborted ? 'Descarga cancelada' : 'No se pudo completar la descarga';
       this.state.diagnostic.result = signal.aborted ? 'cancelled' : 'failed';
       this.state.diagnostic.code = signal.aborted ? 'CANCELLED' : error instanceof DownloadFailure ? error.code : 'NETWORK_OR_EXTRACTOR_ERROR';

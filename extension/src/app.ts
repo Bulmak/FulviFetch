@@ -27,7 +27,7 @@ function render(state: TaskState) {
   status.textContent = state.status; detail.textContent = state.detail;
   track.textContent = state.title; track.hidden = !state.title;
   progress.hidden = !state.active;
-  if (state.total > 0) { progress.max = state.total; progress.value = state.received; }
+  if (state.total > 0 && state.status === 'Descargando el audio') { progress.max = state.total; progress.value = state.received; }
   else progress.removeAttribute('value');
   diagnostic.textContent = JSON.stringify(state.diagnostic, null, 2);
   element('result').dataset.result = state.diagnostic.result;

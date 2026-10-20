@@ -1,5 +1,6 @@
 import {audioCandidates, installRequestHeaders} from './extractor';
 import {downloadAudio} from './media';
+import {remuxM4a} from './remux';
 import {DownloadFailure, extensionForMime, filenameFor} from './core';
 import {DownloadTask, type TaskState, type TaskUpdates} from './task';
 
@@ -71,12 +72,33 @@ async function transfer(videoId: string, signal: AbortSignal, updates: TaskUpdat
         continue;
       }
       signal.throwIfAborted();
+      if (extensionForMime(candidate.mime) === 'm4a') {
+        updates.phase('Preparando el archivo');
+        report('Preparando el audio para guardarlo.');
+        let lastProgress = performance.now();
+        const prepared = await remuxM4a(result, signal, (copied, total) => {
+          if (performance.now() - lastProgress >= 500) {
+            lastProgress = performance.now();
+            report('Preparando el audio para guardarlo.', {packets: copied, totalPackets: total});
+          }
+        });
+        result = prepared.blob;
+        updates.metadata({remuxer: 'mediabunny 1.61.6', remuxPackets: prepared.packets,
+          originalBytes: prepared.inputBytes, preparedBytes: prepared.outputBytes, remuxMs: prepared.milliseconds});
+      }
+      updates.metadata({mime: candidate.mime, itag: candidate.itag, client: candidate.client, bytes: result.size});
       updates.phase('Guardando el archivo');
-      objectUrl = URL.createObjectURL(result);
-      const downloadId = await browser.downloads.download({
-        url: objectUrl, filename: filenameFor(candidate.title, videoId, extensionForMime(candidate.mime)),
-        saveAs: false, conflictAction: 'uniquify'
-      });
+      let downloadId: number;
+      try {
+        objectUrl = URL.createObjectURL(result);
+        downloadId = await browser.downloads.download({
+          url: objectUrl, filename: filenameFor(candidate.title, videoId, extensionForMime(candidate.mime)),
+          saveAs: false, conflictAction: 'uniquify'
+        });
+      } catch {
+        signal.throwIfAborted();
+        throw new DownloadFailure('SAVE_FAILED', 'Firefox no pudo guardar el audio. Revisa la carpeta de descargas y sus permisos.');
+      }
       await waitForSave(downloadId, signal);
       return {title: candidate.title, mime: candidate.mime, itag: candidate.itag, client: candidate.client, bytes: result.size};
     }

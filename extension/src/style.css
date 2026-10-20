@@ -36,3 +36,5 @@ summary { cursor: pointer; width: fit-content; }
 details p { margin-bottom: 6px; }
 pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 10px; max-height: 140px; overflow-y: auto; background: #0b1322; padding: 8px; border-radius: 6px; }
 #copy-diagnostic { padding: 7px 10px; background: #26354b; color: #dce8f7; font-size: 11px; }
+
+details a { color: #9bc5ff; }

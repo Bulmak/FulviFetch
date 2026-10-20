@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Audio local · Prototipo",
-  "version": "0.2.0",
+  "version": "0.3.1",
   "description": "Descarga experimental de audio público de YouTube, dentro de Firefox.",
   "permissions": [
     "downloads",
