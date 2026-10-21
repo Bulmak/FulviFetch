@@ -41,9 +41,9 @@ export function extensionForMime(mime: string): 'm4a' | 'webm' {
   if (base === 'audio/webm') return 'webm';
   throw new DownloadFailure('UNSUPPORTED_FORMAT', 'El formato de audio no está admitido en esta prueba.');
 }
-export function filenameFor(title: string, id: string, extension: string): string {
+export function filenameFor(title: string, id: string, extension: string, includeId = true): string {
   const clean = title.normalize('NFC').replace(/\s/gu, ' ').replace(/[<>:"/\\|?*\u0000-\u001f\u007f]/g, '_').replace(/^[. ]+|[. ]+$/g, '').slice(0, 120).replace(/[. ]+$/g, '');
-  return `FulviFetch/${clean || 'Audio'} [${id}].${extension}`;
+  return `FulviFetch/${clean || 'Audio'}${includeId ? ` [${id}]` : ''}.${extension}`;
 }
 export function checkSize(value: number): number {
   if (!Number.isSafeInteger(value) || value <= 0) throw new DownloadFailure('UNKNOWN_SIZE', 'No se pudo determinar el tamaño completo del audio.');

@@ -68,6 +68,10 @@
       "48": "icons/audio.svg"
     }
   },
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": false
+  },
   "content_security_policy": {
     "extension_pages": "script-src 'self'; object-src 'none'; frame-src 'none'; connect-src 'self' https://www.youtube.com https://youtubei.googleapis.com https://*.googlevideo.com https://i.ytimg.com"
   },

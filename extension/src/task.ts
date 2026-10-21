@@ -14,6 +14,7 @@ export interface TaskState {
   version: string; revision: number; active: boolean; url: string; status: string; detail: string;
   title: string; received: number; total: number;
   queue: QueueItem[];
+  downloadId?: number;
   diagnostic: {version: string; result: TaskResult; events: EventData[]; [key: string]: unknown};
 }
 export interface TaskUpdates {
@@ -145,6 +146,7 @@ export class DownloadTask {
       metadata: data => {
         Object.assign(this.state.diagnostic, data);
         if (typeof data.title === 'string') this.state.title = data.title;
+        if (typeof data.downloadId === 'number') this.state.downloadId = data.downloadId;
         this.publish();
       }
     };

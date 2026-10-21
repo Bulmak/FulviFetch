@@ -18,6 +18,8 @@ El paquete ya está preparado en este computador.
 5. Pulsa el icono: se abre un panel pequeño, sin crear una pestaña.
 6. Pega un enlace o pulsa **Usar video actual**, y después **Descargar audio**.
 7. Puedes cerrar y volver a abrir el panel: la tarea continúa en segundo plano.
+8. Las preferencias están en el menú de extensiones → **Administrar la extensión
+   → Preferencias** (o `about:addons` → el engranaje de FulviFetch).
 
 También puedes seleccionar `artifacts/fulvifetch-0.3.3.zip` desde el
 diálogo de carga temporal. Comprueba que el panel muestre **0.3.3**.
@@ -49,6 +51,10 @@ Se requiere Firefox 142 o posterior; se probó en Firefox 158.0 sobre Windows.
 - El M4A guardado lleva el título, el autor y la carátula del video. Los
   metadatos se añaden al contenedor sin tocar los paquetes de audio: el
   contenido y la duración son los mismos.
+- Preferencias en una página propia: formato (M4A o WebM), carátula dentro del
+  archivo e identificador del video en el nombre. Se guardan en `storage.local`
+  y no se pierden al reiniciar Firefox.
+- Al terminar, el panel ofrece abrir el archivo en el gestor de descargas.
 - Transferencia por fragmentos, comprobación de rangos e integridad y cancelación.
 - Alternativa iOS si el primer cliente no ofrece audio; verificada con un video
   marcado para niños. No garantiza compatibilidad con todos esos videos.
@@ -77,8 +83,11 @@ Se requiere Firefox 142 o posterior; se probó en Firefox 158.0 sobre Windows.
 - `src/core.ts`: validación de enlaces, nombres, tamaños y formatos.
 - `src/writer.ts`: escritura agrupada del estado; evita una escritura por fragmento.
 - `src/feedback.ts`: mensajes de error del panel según el código del fallo.
-- `public/manifest.json`: popup, proceso de fondo y permisos.
+- `src/preferences.ts`: preferencias del usuario y orden de los formatos.
+- `src/requests.ts`: Traduce un enlace o una pestaña en una solicitud de descarga.
+- `public/manifest.json`: popup, proceso de fondo, permisos, menú y atajo.
 - `index.html` y `src/style.css`: estructura y presentación del panel.
+- `options.html` y `src/options.ts`: página de preferencias.
 
 Firefox MV3 usa un proceso de fondo no persistente. El manejador de inicio
 acepta la tarea y devuelve el estado inicial. La ejecución pertenece al proceso

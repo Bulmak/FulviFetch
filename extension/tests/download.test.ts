@@ -135,3 +135,9 @@ test('Una carátula demasiado grande se descarta', async t => {
   t.mock.method(globalThis, 'fetch', async () => new Response(new Uint8Array(3 * 1024 * 1024), {headers: {'Content-Type': 'image/jpeg'}}));
   assert.equal(await fetchImage('https://i.ytimg.com/vi/abc/hqdefault.jpg', new AbortController().signal), undefined);
 });
+
+test('El identificador del video se puede quitar del nombre del archivo', () => {
+  assert.equal(filenameFor('Canción', id, 'm4a', false), 'FulviFetch/Canción.m4a');
+  assert.equal(filenameFor('Canción', id, 'm4a'), 'FulviFetch/Canción [' + id + '].m4a');
+  assert.equal(filenameFor('', id, 'webm', false), 'FulviFetch/Audio.webm');
+});

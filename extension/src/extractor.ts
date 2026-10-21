@@ -1,5 +1,6 @@
 import {Innertube, Log, Constants} from 'youtubei.js/cf-worker';
 import {DownloadFailure, extensionForMime, validateMediaUrl} from './core.ts';
+import {compareFormats, DEFAULT_PREFERENCES, type Preferences} from './preferences.ts';
 import type {Candidate} from './media.ts';
 Log.setLevel(Log.Level.NONE);
 interface PlaybackContext { videoId: string; visitorData: string; clientVersion: string; }
@@ -127,7 +128,7 @@ function metadataFrom(basic: {
   return {artist, cover: best?.url};
 }
 
-export async function* audioCandidates(videoId: string, signal: AbortSignal, report: Report): AsyncGenerator<Candidate> {
+export async function* audioCandidates(videoId: string, signal: AbortSignal, report: Report, preferences: Preferences = DEFAULT_PREFERENCES): AsyncGenerator<Candidate> {
   const context = await pageContext(videoId, signal).catch(() => { signal.throwIfAborted(); return null; });
   const api = await Innertube.create({
     generate_session_locally: true, retrieve_player: false, retrieve_innertube_config: false,
@@ -147,8 +148,7 @@ export async function* audioCandidates(videoId: string, signal: AbortSignal, rep
       const formats = (info.streaming_data?.adaptive_formats ?? []).filter(format => {
         if (!format.has_audio || format.has_video || !format.url || format.drm_families?.length || format.is_type_otf) return false;
         try { extensionForMime(format.mime_type); validateMediaUrl(format.url); return true; } catch { return false; }
-      }).sort((a, b) => Number(!!b.is_original) - Number(!!a.is_original)
-        || Number(b.mime_type.startsWith('audio/mp4')) - Number(a.mime_type.startsWith('audio/mp4')) || b.bitrate - a.bitrate);
+      }).sort((a, b) => compareFormats(a, b, preferences.format));
       report(formats.length ? 'Audio disponible; preparando la descarga.' : 'Este método no ofreció un archivo descargable.', {client, formats: formats.length});
       for (const format of formats.slice(0, 3)) {
         total++;

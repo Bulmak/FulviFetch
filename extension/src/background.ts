@@ -5,6 +5,7 @@ import {DownloadFailure, extensionForMime, filenameFor} from './core.ts';
 import {DownloadTask, type TaskState, type TaskUpdates} from './task.ts';
 import {createThrottledWriter} from './writer.ts';
 import {requestFromUrl, type VideoRequest} from './requests.ts';
+import {DEFAULT_PREFERENCES, normalizePreferences, type Preferences} from './preferences.ts';
 
 // Los estados intermedios se agrupan: escribir en cada fragmento saturaba el
 // almacenamiento y el distintivo del icono. El último estado siempre se guarda.
@@ -49,6 +50,15 @@ function waitForSave(id: number, signal: AbortSignal): Promise<void> {
   });
 }
 
+async function loadPreferences(): Promise<Preferences> {
+  try {
+    const stored = await browser.storage.local.get('preferences');
+    return normalizePreferences(stored.preferences);
+  } catch {
+    return DEFAULT_PREFERENCES;
+  }
+}
+
 async function transfer(videoId: string, signal: AbortSignal, updates: TaskUpdates) {
   const {report} = updates;
   let removeHeaders: (() => void) | undefined;
@@ -59,7 +69,8 @@ async function transfer(videoId: string, signal: AbortSignal, updates: TaskUpdat
     updates.metadata({browserVersion: browserInfo.version});
     const permissions = await browser.permissions.getAll();
     if (!permissions.origins?.some(origin => origin.includes('youtube.com'))) throw new DownloadFailure('HOST_PERMISSION', 'Concede a la extensión acceso a YouTube en sus permisos de Firefox.');
-    for await (const candidate of audioCandidates(videoId, signal, report)) {
+    const preferences = await loadPreferences();
+    for await (const candidate of audioCandidates(videoId, signal, report, preferences)) {
       let result: Blob;
       updates.metadata({title: candidate.title});
       updates.phase('Descargando el audio');
@@ -79,7 +90,7 @@ async function transfer(videoId: string, signal: AbortSignal, updates: TaskUpdat
       signal.throwIfAborted();
       if (extensionForMime(candidate.mime) === 'm4a') {
         // La carátula es un extra: si no se puede conseguir, la descarga sigue.
-        const cover = await fetchImage(candidate.cover, signal);
+        const cover = preferences.cover ? await fetchImage(candidate.cover, signal) : undefined;
         updates.phase('Preparando el archivo');
         report('Preparando el audio para guardarlo.');
         let lastProgress = performance.now();
@@ -103,13 +114,14 @@ async function transfer(videoId: string, signal: AbortSignal, updates: TaskUpdat
       try {
         objectUrl = URL.createObjectURL(result);
         downloadId = await browser.downloads.download({
-          url: objectUrl, filename: filenameFor(candidate.title, videoId, extensionForMime(candidate.mime)),
+          url: objectUrl, filename: filenameFor(candidate.title, videoId, extensionForMime(candidate.mime), preferences.includeId),
           saveAs: false, conflictAction: 'uniquify'
         });
       } catch {
         signal.throwIfAborted();
         throw new DownloadFailure('SAVE_FAILED', 'Firefox no pudo guardar el audio. Revisa la carpeta de descargas y sus permisos.');
       }
+      updates.metadata({downloadId});
       await waitForSave(downloadId, signal);
       return {title: candidate.title, mime: candidate.mime, itag: candidate.itag, client: candidate.client, bytes: result.size};
     }

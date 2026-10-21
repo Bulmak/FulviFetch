@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="es">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Preferencias de FulviFetch</title></head>
+<body>
+  <main>
+    <header>
+      <img src="/icons/audio.svg" width="32" height="32" alt="">
+      <div><h1>Preferencias de FulviFetch</h1><p>Se aplican a las descargas siguientes.</p></div>
+    </header>
+    <form id="preferences">
+      <fieldset>
+        <legend>Formato del audio</legend>
+        <label><input type="radio" name="format" value="auto"> Automático: se prefiere M4A (AAC), que se reproduce en todas partes</label>
+        <label><input type="radio" name="format" value="m4a"> M4A (AAC)</label>
+        <label><input type="radio" name="format" value="webm"> WebM (Opus): más compacto</label>
+      </fieldset>
+      <label class="option"><input type="checkbox" id="cover"> Guardar la carátula dentro del archivo</label>
+      <label class="option"><input type="checkbox" id="include-id"> Añadir el identificador del video al nombre del archivo</label>
+      <p id="saved" role="status" hidden>Preferencias guardadas.</p>
+    </form>
+    <footer><span>Audio original · M4A / WebM</span><span>Atajo: Ctrl+Shift+Y</span></footer>
+  </main>
+  <script type="module" src="/src/options.ts"></script>
+</body>
+</html>

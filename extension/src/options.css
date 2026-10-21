@@ -1,0 +1,16 @@
+:root { font: 14px/1.6 system-ui, sans-serif; color: #ecf1fb; background: #111827; color-scheme: dark; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+main { max-width: 620px; margin: 0 auto; padding: 28px 24px 40px; }
+header { display: flex; align-items: center; gap: 12px; margin-bottom: 26px; }
+header img { flex-shrink: 0; }
+h1 { font-size: 20px; line-height: 1.2; margin: 0; letter-spacing: -.02em; }
+header p { margin: 3px 0 0; color: #a4b1c7; font-size: 12px; }
+fieldset { border: 1px solid #303f57; border-radius: 10px; padding: 12px 16px 16px; margin: 0 0 18px; }
+legend { padding: 0 6px; font-size: 12px; font-weight: 650; color: #cbd9ee; }
+fieldset label, .option { display: flex; align-items: flex-start; gap: 9px; margin: 8px 0; font-size: 13px; color: #cbd9ee; }
+.option { margin: 12px 0; }
+input[type="radio"], input[type="checkbox"] { margin: 3px 0 0; accent-color: #9bc5ff; flex-shrink: 0; }
+input:focus-visible, button:focus-visible { outline: 2px solid #94bfff; outline-offset: 3px; }
+#saved { margin: 14px 0 0; font-size: 12px; color: #76dab1; }
+footer { display: flex; justify-content: space-between; gap: 12px; font-size: 11px; color: #8e9cb2; border-top: 1px solid #2b374d; margin-top: 28px; padding-top: 14px; }

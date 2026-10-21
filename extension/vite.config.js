@@ -6,7 +6,7 @@ export default {
   build: {
     target: 'firefox142', sourcemap: false, minify: false,
     rollupOptions: {
-      input: {popup: 'index.html', background: 'src/background.ts'},
+      input: {popup: 'index.html', background: 'src/background.ts', options: 'options.html'},
       output: {entryFileNames: chunk => chunk.name === 'background' ? 'background.js' : 'assets/[name]-[hash].js'}
     }
   }

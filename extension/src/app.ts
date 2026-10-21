@@ -13,6 +13,7 @@ const detail = element<HTMLParagraphElement>('detail');
 const progress = element<HTMLProgressElement>('progress');
 const diagnostic = element<HTMLPreElement>('diagnostic');
 const track = element<HTMLParagraphElement>('track-title');
+const showFile = element<HTMLButtonElement>('show-file');
 let revision = -1;
 let lastState: TaskState | undefined;
 let userEdited = false;
@@ -35,6 +36,7 @@ function render(state: TaskState) {
   else progress.removeAttribute('value');
   diagnostic.textContent = JSON.stringify(state.diagnostic, null, 2);
   element('result').dataset.result = state.diagnostic.result;
+  showFile.hidden = state.active || typeof state.downloadId !== 'number';
   if (state.url && !userEdited) input.value = state.url;
   renderQueue(state);
 }
@@ -116,6 +118,10 @@ form.addEventListener('submit', event => {
 });
 element('clear-queue').addEventListener('click', () => {
   void browser.runtime.sendMessage({type: 'CLEAR_QUEUE'}).catch(() => undefined);
+});
+showFile.addEventListener('click', () => {
+  const id = lastState?.downloadId;
+  if (typeof id === 'number') void browser.downloads.show(id).catch(() => undefined);
 });
 cancel.addEventListener('click', () => {
   cancel.disabled = true;
