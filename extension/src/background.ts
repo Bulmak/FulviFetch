@@ -1,24 +1,28 @@
-import {audioCandidates, installRequestHeaders} from './extractor';
-import {downloadAudio} from './media';
-import {remuxM4a} from './remux';
-import {DownloadFailure, extensionForMime, filenameFor} from './core';
-import {DownloadTask, type TaskState, type TaskUpdates} from './task';
+import {audioCandidates, installRequestHeaders} from './extractor.ts';
+import {downloadAudio} from './media.ts';
+import {remuxM4a} from './remux.ts';
+import {DownloadFailure, extensionForMime, filenameFor} from './core.ts';
+import {DownloadTask, type TaskState, type TaskUpdates} from './task.ts';
+import {createThrottledWriter} from './writer.ts';
 
-let persistence = Promise.resolve();
+// Los estados intermedios se agrupan: escribir en cada fragmento saturaba el
+// almacenamiento y el distintivo del icono. El último estado siempre se guarda.
+const writer = createThrottledWriter<TaskState>(async state => {
+  await browser.storage.session.set({task: state});
+  const result = state.diagnostic.result;
+  const text = state.active ? state.total ? Math.floor(state.received * 100 / state.total) + '%' : '…'
+    : result === 'complete' ? '✓' : result === 'failed' ? '!' : '';
+  await Promise.all([
+    browser.action.setBadgeText({text}),
+    browser.action.setBadgeBackgroundColor({color: result === 'failed' ? '#b43b54' : '#245ea8'}),
+    browser.action.setTitle({title: state.active ? 'FulviFetch · ' + state.status : 'FulviFetch'})
+  ]);
+}, 200);
+
 function publish(state: TaskState) {
-  // Serial writes keep the latest progress from being overwritten by an older update.
-  persistence = persistence.catch(() => undefined).then(async () => {
-    await browser.storage.session.set({task: state});
-    const result = state.diagnostic.result;
-    const text = state.active ? state.total ? Math.floor(state.received * 100 / state.total) + '%' : '…'
-      : result === 'complete' ? '✓' : result === 'failed' ? '!' : '';
-    await Promise.all([
-      browser.action.setBadgeText({text}),
-      browser.action.setBadgeBackgroundColor({color: result === 'failed' ? '#b43b54' : '#245ea8'}),
-      browser.action.setTitle({title: state.active ? 'FulviFetch · ' + state.status : 'FulviFetch'})
-    ]);
-  });
-  void persistence.catch(() => undefined);
+  writer.push(state);
+  // El estado final no puede esperar al intervalo.
+  if (!state.active) void writer.flush();
 }
 
 function waitForSave(id: number, signal: AbortSignal): Promise<void> {

@@ -1,6 +1,7 @@
 import './style.css';
-import {videoIdFromUrl} from './core';
-import type {TaskState} from './task';
+import {videoIdFromUrl} from './core.ts';
+import {feedbackFor, type Feedback} from './feedback.ts';
+import type {TaskState} from './task.ts';
 const element = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
 const form = element<HTMLFormElement>('download-form');
 const input = element<HTMLInputElement>('url');
@@ -33,9 +34,14 @@ function render(state: TaskState) {
   element('result').dataset.result = state.diagnostic.result;
   if (state.url && (!userEdited || state.active)) input.value = state.url;
 }
-function showError(error: unknown) {
-  status.textContent = 'Revisa el enlace';
-  detail.textContent = error instanceof Error ? error.message : 'No se pudo comunicar con la extensión.';
+function showError(error: unknown): Feedback {
+  const feedback = feedbackFor(error);
+  status.textContent = feedback.status;
+  detail.textContent = feedback.detail;
+  return feedback;
+}
+async function readTask(): Promise<TaskState | undefined> {
+  return browser.runtime.sendMessage({type: 'GET_TASK'}).catch(() => undefined);
 }
 async function useCurrentVideo(automatic = false) {
   if (lastState?.active || starting) return;
@@ -55,7 +61,12 @@ async function useCurrentVideo(automatic = false) {
   }
 }
 input.addEventListener('input', () => { userEdited = true; track.hidden = true; });
-current.addEventListener('click', () => { void useCurrentVideo().catch(showError); });
+current.addEventListener('click', () => {
+  void useCurrentVideo().catch(() => {
+    status.textContent = 'No se pudo leer la pestaña';
+    detail.textContent = 'Abre un video de YouTube o pega el enlace en el campo de arriba.';
+  });
+});
 form.addEventListener('submit', event => {
   event.preventDefault();
   if (lastState?.active || starting) return;
@@ -63,15 +74,26 @@ form.addEventListener('submit', event => {
   starting = true; start.disabled = true; input.disabled = true; current.disabled = true;
   status.textContent = 'Preparando la descarga';
   // The background accepts the job; progress arrives through session storage.
-  void browser.runtime.sendMessage({type: 'START_TASK', url: input.value}).then((state: TaskState) => render(state)).catch(error => {
+  void browser.runtime.sendMessage({type: 'START_TASK', url: input.value}).then((state: TaskState) => render(state)).catch(async error => {
     starting = false;
+    const feedback = showError(error);
+    if (feedback.keepRunning) {
+      // Otra descarga sigue en curso: el estado real manda y los controles
+      // deben seguir deshabilitados.
+      const state = await readTask();
+      if (state) { render(state); return; }
+    }
     start.disabled = false; input.disabled = false; current.disabled = false;
-    showError(error);
   });
 });
 cancel.addEventListener('click', () => {
   cancel.disabled = true;
-  void browser.runtime.sendMessage({type: 'CANCEL_TASK'}).then((state: TaskState) => render(state)).catch(showError);
+  void browser.runtime.sendMessage({type: 'CANCEL_TASK'}).then((state: TaskState) => render(state)).catch(async () => {
+    // La cancelación no llegó: la descarga puede seguir en curso.
+    const state = await readTask();
+    if (state) render(state);
+    else { status.textContent = 'No se pudo cancelar'; detail.textContent = 'Vuelve a intentarlo en unos segundos.'; }
+  });
 });
 browser.storage.onChanged.addListener((changes, area) => {
   if (area === 'session' && changes.task?.newValue) render(changes.task.newValue as TaskState);
@@ -87,4 +109,7 @@ element('copy-diagnostic').addEventListener('click', () => {
 void browser.runtime.sendMessage({type: 'GET_TASK'}).then(async (state: TaskState) => {
   render(state);
   if (!state.active) await useCurrentVideo(true);
-}).catch(showError);
+}).catch(() => {
+  status.textContent = 'No se pudo comunicar con la extensión';
+  detail.textContent = 'Vuelve a abrir el panel para reintentar.';
+});
