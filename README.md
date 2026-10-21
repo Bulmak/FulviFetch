@@ -58,3 +58,12 @@ la comprobación de tipos, las pruebas, la compilación y la validación con
 `web-ext`.
 
 El empaquetado genera `extension/dist/` y el ZIP en `extension/artifacts/`.
+
+## Instalación permanente
+
+Firefox solo admite complementos firmados por Mozilla. La firma se pide en
+addons.mozilla.org con el canal **auto-distribuido** (unlisted): no aparece en
+el catálogo, pero se instala de forma permanente como cualquier otro.
+
+Los pasos, la firma con `npm run sign` y el paquete de fuentes que pide Mozilla
+están en [extension/README.md](extension/README.md#instalación-permanente).

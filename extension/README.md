@@ -104,6 +104,54 @@ Los permisos son `activeTab`, para leer el enlace al usar el botón o el atajo,
 solicitan permisos para todas las webs. Los hosts son YouTube, el servidor de
 audio de Google, el de la API y `i.ytimg.com`, que sirve las miniaturas.
 
+## Instalación permanente
+
+Firefox exige que todo complemento esté firmado por Mozilla. La firma se pide en
+addons.mozilla.org (AMO) y hay dos canales: **listado** (aparece en el
+catálogo) y **auto-distribuido** (unlisted, no aparece pero se firma igual).
+Este proyecto usa el auto-distribuido: es para uso propio o de un equipo
+reducido.
+
+1. Creá la cuenta en <https://addons.mozilla.org/developers/>.
+2. En el Developer Hub, **Submit a New Add-on** → **On your own** (unlisted).
+3. En **API keys**, volvé a elegir **Submit a new add-on** → **On your own** y
+   generá las credenciales (issuer y secret).
+4. Firmá la extensión:
+
+   ```powershell
+   $env:AMO_API_KEY = '...'
+   $env:AMO_API_SECRET = '...'
+   npm.cmd run build
+   npm.cmd run sign
+   ```
+
+   El XPI firmado queda en `artifacts/signed/`.
+5. Instálalo de forma permanente: `about:addons` → engranaje → **Instalar
+   complemento desde el archivo…** → el ZIP de `artifacts/signed/`.
+
+Para actualizar, subí la versión en `package.json` y en
+`public/manifest.json`, y volvé a firmar: AMO reparte las actualizaciones
+solo, porque las copias auto-distribuidas se actualizan desde AMO aunque el
+manifiesto no declare `update_url`.
+
+Mozilla revisa el código, así que hay que entregarle las fuentes. El comando
+`npm run source` genera el paquete en `artifacts/fulvifetch-source-<versión>.zip`
+con el árbol commiteado y las instrucciones de compilación.
+
+Lo que hay que tener en cuenta:
+
+- **Revisión**: la validación automática tarda hasta 24 horas. Después, todos
+  los complementos, también los auto-distribuidos, pueden pasar por revisión
+  manual en cualquier momento, y una revisión negativa puede bloquear el
+  complemento.
+- **El ID** (`browser_specific_settings.gecko.id`) tiene que ser único. AMO
+  comprueba la unicidad; si rechaza `fulvifetch@bulmak.local`, se cambia por
+  un GUID en una línea del manifiesto.
+- **Datos**: el manifiesto declara `data_collection_permissions: ["none"]`.
+  Todo se queda en el equipo: no hay servidor, ni cuentas, ni telemetría.
+- **Legal**: los Términos de YouTube prohíben descargar fuera de sus
+  mecanismos. Decidí eso antes de pedir la firma.
+
 ## Desarrollo
 
 Node.js se necesita para desarrollar, no para utilizar el paquete generado.
