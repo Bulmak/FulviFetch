@@ -1,7 +1,7 @@
 # FulviFetch
 
 Extensión para Firefox que descarga el audio de videos públicos de YouTube desde
-un popup en la barra de herramientas. Versión actual: **0.3.2**.
+un popup en la barra de herramientas. Versión actual: **0.3.3**.
 
 Funciona dentro del navegador: no requiere Python, FFmpeg, programas auxiliares
 ni un servidor. Guarda M4A/AAC o WebM; la conversión a MP3 y los recortes siguen
@@ -30,7 +30,8 @@ permisos, requisitos y límites del prototipo.
 | `.local/audio/` | Audios personales y archivos de comparación conservados en este equipo |
 | `.local/tools/` | Herramientas opcionales para pruebas de desarrollo |
 
-`docs/` y `.local/` están excluidos de Git. Las herramientas de esa carpeta se usan para
+`docs/` y `.local/` están excluidos de Git, igual que `.atl/` (metadatos
+locales de las herramientas). Las herramientas de esa carpeta se usan para
 comprobar el prototipo durante el desarrollo; no forman parte de la extensión.
 
 Dentro de `extension/`, `src/` contiene el código, `public/` el manifiesto y los
@@ -45,9 +46,15 @@ Se necesita Node.js para compilar y probar el proyecto:
 ```powershell
 cd extension
 npm.cmd ci
+npm.cmd run typecheck
 npm.cmd test
 npm.cmd run package
 npm.cmd run lint:extension
 ```
+
+`npm run typecheck` comprueba los tipos del código y también los de las
+pruebas. La CI (`.github/workflows/ci.yml`) ejecuta en cada push y pull request
+la comprobación de tipos, las pruebas, la compilación y la validación con
+`web-ext`.
 
 El empaquetado genera `extension/dist/` y el ZIP en `extension/artifacts/`.

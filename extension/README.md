@@ -1,7 +1,7 @@
 # FulviFetch: prototipo para Firefox
 
 Extensión independiente para descargar el audio original de videos públicos de
-YouTube. La versión 0.3.2 se usa desde un popup en la barra de herramientas.
+YouTube. La versión 0.3.3 se usa desde un popup en la barra de herramientas.
 
 ## Instalar o actualizar la prueba
 
@@ -9,16 +9,18 @@ El paquete ya está preparado en este computador.
 
 1. Abre `about:debugging#/runtime/this-firefox` en Firefox de escritorio.
 2. Si tienes la versión anterior, cierra sus pestañas y quita el complemento temporal.
-3. Pulsa **Cargar complemento temporal** y selecciona
-   `E:\Extension_MP3\extension\dist\manifest.json`.
+   Desde 0.3.3 el ID del complemento cambió (`fulvifetch@bulmak.local`): hay que
+   quitarlo aunque el número de versión sea el mismo.
+3. Pulsa **Cargar complemento temporal** y selecciona el archivo
+   `dist/manifest.json` de esta carpeta (`extension/dist/manifest.json`).
 4. Abre el menú de extensiones, localiza **FulviFetch** y fija su
    botón a la barra de herramientas si quieres tenerlo siempre visible.
 5. Pulsa el icono: se abre un panel pequeño, sin crear una pestaña.
 6. Pega un enlace o pulsa **Usar video actual**, y después **Descargar audio**.
 7. Puedes cerrar y volver a abrir el panel: la tarea continúa en segundo plano.
 
-También puedes seleccionar `artifacts/fulvifetch-0.3.2.zip` desde el
-diálogo de carga temporal. Comprueba que el panel muestre **0.3.2**.
+También puedes seleccionar `artifacts/fulvifetch-0.3.3.zip` desde el
+diálogo de carga temporal. Comprueba que el panel muestre **0.3.3**.
 
 El archivo se guarda en `FulviFetch`, dentro de las descargas de Firefox.
 Puede aparecer un diálogo de guardado según tu configuración. No necesitas
@@ -61,6 +63,8 @@ Se requiere Firefox 142 o posterior; se probó en Firefox 158.0 sobre Windows.
 - `src/media.ts`: transferencia por fragmentos y verificación del archivo.
 - `src/remux.ts`: reconstrucción del M4A con Mediabunny, sin decodificar audio.
 - `src/core.ts`: validación de enlaces, nombres, tamaños y formatos.
+- `src/writer.ts`: escritura agrupada del estado; evita una escritura por fragmento.
+- `src/feedback.ts`: mensajes de error del panel según el código del fallo.
 - `public/manifest.json`: popup, proceso de fondo y permisos.
 - `index.html` y `src/style.css`: estructura y presentación del panel.
 
@@ -81,16 +85,27 @@ Node.js se necesita para desarrollar, no para utilizar el paquete generado.
 Se usó Node.js 24.14.1 y npm 11.11.0.
 
 ```powershell
-cd E:\Extension_MP3\extension
+cd extension
 npm.cmd ci
+npm.cmd run typecheck
 npm.cmd test
 npm.cmd run package
 npm.cmd run lint:extension
 ```
 
+`npm run typecheck` comprueba los tipos del código **y** de las pruebas: los
+archivos de `tests/` también se verifican, no solo los de `src/`.
+
 `dist/` contiene los archivos compilados y `artifacts/` el ZIP de instalación
 temporal. Ambos están excluidos de Git y se generan desde el código fuente.
 No se usa Vite como servidor: Firefox carga archivos estáticos empaquetados.
+
+## Integración continua
+
+`.github/workflows/ci.yml` ejecuta en cada push y pull request la comprobación
+de tipos, las pruebas, la compilación y `web-ext lint` con Node 24 y Node 26.
+Las pruebas de navegador no forman parte de la CI: necesitan un Firefox real y
+acceso a YouTube, así que se ejecutan a mano con `scripts/browser-check.mjs`.
 
 ## Pruebas de navegador
 
@@ -99,9 +114,19 @@ Abre el popup nativo desde la barra, verifica el video actual, cierra y reabre
 el panel durante descargas reales, comprueba archivos guardados, enlaces
 inválidos y cancelación, y verifica que no se hayan abierto pestañas adicionales.
 
-En este equipo Geckodriver está en `../.local/tools/geckodriver/geckodriver.exe` y Firefox
-en `C:\Program Files\Mozilla Firefox\firefox.exe`. Se pueden configurar sus rutas
-con `GECKODRIVER_BIN` y `FIREFOX_BIN`.
+El script funciona en Windows, Linux y macOS. Busca Firefox y Geckodriver en las
+rutas habituales de cada sistema y, antes de eso, en `../.local/tools/`. Si no
+los encuentra, hay que indicar sus rutas:
+
+```powershell
+$env:FIREFOX_BIN = 'C:\Program Files\Mozilla Firefox\firefox.exe'
+$env:GECKODRIVER_BIN = 'E:\ruta\a\geckodriver.exe'
+node scripts/browser-check.mjs jNQXAC9IVRw llmbcMmZuQ4
+```
+
+El identificador del botón de la barra se deriva de
+`browser_specific_settings.gecko.id` del manifiesto, así que cambiar el ID del
+complemento no rompe esta comprobación.
 
 ```powershell
 node scripts/browser-check.mjs jNQXAC9IVRw llmbcMmZuQ4

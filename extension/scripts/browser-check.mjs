@@ -9,6 +9,7 @@ import {mkdir, readdir, readFile, writeFile, cp, stat} from 'node:fs/promises';
 import {resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {videoIdFromUrl} from '../src/core.ts';
+import {locateBinary, widgetBaseFor} from './support.ts';
 const root = resolve(import.meta.dirname, '..');
 const output = resolve(root, '.test-artifacts');
 await mkdir(output, {recursive: true});
@@ -18,6 +19,12 @@ const deniedOffset = process.env.SIMULATE_MEDIA_403_AT === undefined ? null : Nu
 assert.ok(Number.isFinite(delay) && delay >= 0 && delay <= 10000);
 assert.ok(Number.isFinite(closeMs) && closeMs >= 0 && closeMs <= 55000);
 const manifest = JSON.parse(await readFile(resolve(root, 'dist/manifest.json'), 'utf8'));
+const addonId = manifest.browser_specific_settings?.gecko?.id;
+if (!addonId) throw new Error('El manifiesto no declara browser_specific_settings.gecko.id.');
+// El identificador del botón se deriva del manifiesto: no hay valores copiados a mano.
+const widgetBase = widgetBaseFor(addonId);
+const buttonId = widgetBase + '-BAP';
+const widgetId = widgetBase + '-browser-action';
 let archive = resolve(root, 'artifacts', 'fulvifetch-' + manifest.version + '.zip');
 if (delay || deniedOffset !== null) {
   const source = resolve(output, 'instrumented-popup');
@@ -38,8 +45,29 @@ if (delay || deniedOffset !== null) {
   if (build.status !== 0) throw new Error(build.stdout + build.stderr);
   archive = resolve(output, 'instrumented-package', 'fulvifetch-' + manifest.version + '.zip');
 }
+const repoTool = name => resolve(root, '..', '.local', 'tools', name, process.platform === 'win32' ? name + '.exe' : name);
+const firefoxCandidates = process.platform === 'win32'
+  ? ['C:\\Program Files\\Mozilla Firefox\\firefox.exe', 'C:\\Program Files (x86)\\Mozilla Firefox\\firefox.exe']
+  : process.platform === 'darwin'
+    ? ['/Applications/Firefox.app/Contents/MacOS/firefox']
+    : ['/usr/bin/firefox', '/usr/local/bin/firefox', '/snap/bin/firefox', '/usr/lib/firefox/firefox'];
+const geckodriverCandidates = process.platform === 'win32'
+  ? []
+  : process.platform === 'darwin'
+    ? ['/opt/homebrew/bin/geckodriver', '/usr/local/bin/geckodriver']
+    : ['/usr/bin/geckodriver', '/usr/local/bin/geckodriver'];
+const firefoxBinary = locateBinary('FIREFOX_BIN', [repoTool('firefox'), ...firefoxCandidates]);
+const geckodriverBinary = locateBinary('GECKODRIVER_BIN', [repoTool('geckodriver'), ...geckodriverCandidates]);
+function missingBinary(envVar, label) {
+  const configured = process.env[envVar]?.trim();
+  return configured
+    ? `La ruta de ${label} en ${envVar} no existe: ${configured}`
+    : `No se encontró ${label}. Define ${envVar} con la ruta de su ejecutable.`;
+}
+if (!firefoxBinary) throw new Error(missingBinary('FIREFOX_BIN', 'Firefox'));
+if (!geckodriverBinary) throw new Error(missingBinary('GECKODRIVER_BIN', 'geckodriver'));
 const options = new firefox.Options()
-  .setBinary(process.env.FIREFOX_BIN || 'C:\\Program Files\\Mozilla Firefox\\firefox.exe')
+  .setBinary(firefoxBinary)
   .addArguments('-headless')
   .setPageLoadStrategy('eager')
   .setPreference('browser.download.folderList', 2)
@@ -48,10 +76,9 @@ const options = new firefox.Options()
   .setPreference('browser.helperApps.neverAsk.saveToDisk', 'audio/mp4,audio/webm,application/octet-stream')
   .setPreference('media.volume_scale', '0.0')
   .setPreference('media.autoplay.default', 5);
-const service = new firefox.ServiceBuilder(process.env.GECKODRIVER_BIN || resolve(root, '..', '.local', 'tools/geckodriver/geckodriver.exe')).addArguments('--allow-system-access');
+const service = new firefox.ServiceBuilder(geckodriverBinary).addArguments('--allow-system-access');
 const driver = await new Builder().forBrowser('firefox').setFirefoxOptions(options).setFirefoxService(service).build();
 const results = [];
-const buttonId = 'audio-local_bulmak_local-BAP';
 async function popup(script) {
   const response = await driver.executeAsyncScript(function(script, done) {
     const frame = document.querySelector('browser.webextension-popup-browser');
@@ -98,7 +125,9 @@ try {
   const initialTabs = await driver.executeScript(() => gBrowser.tabs.length);
   const idleTimeout = await driver.executeScript(() => Services.prefs.getIntPref('extensions.background.idle.timeout', 30000));
   console.log('Tiempo de inactividad nativo de Firefox: ' + idleTimeout + ' ms.');
-  await driver.executeScript(() => window.CustomizableUI.addWidgetToArea('audio-local_bulmak_local-browser-action', window.CustomizableUI.AREA_NAVBAR));
+  await driver.executeScript(function(widget) {
+    window.CustomizableUI.addWidgetToArea(widget, window.CustomizableUI.AREA_NAVBAR);
+  }, widgetId);
   await openPopup();
   console.log('Estado inicial: ' + JSON.stringify(await popup('return {url:document.getElementById("url").value,status:document.getElementById("status").textContent,detail:document.getElementById("detail").textContent}')));
   await driver.wait(async () => await popup('return document.getElementById("url").value') === 'https://www.youtube.com/watch?v=jNQXAC9IVRw', 10000, 'No se detectó el video activo.');
