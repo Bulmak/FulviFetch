@@ -14,7 +14,7 @@ function publish(state: TaskState) {
       : result === 'complete' ? '✓' : result === 'failed' ? '!' : '';
     await Promise.all([
       browser.action.setBadgeText({text}),
-      browser.action.setBadgeBackgroundColor({color: result === 'failed' ? '#b43b54' : '#245ea8'}),
+      browser.action.setBadgeBackgroundColor({color: result === 'failed' ? '#8c3f30' : '#7a4a32'}),
       browser.action.setTitle({title: state.active ? 'FulviFetch · ' + state.status : 'FulviFetch'})
     ]);
   });
@@ -92,7 +92,7 @@ async function transfer(videoId: string, signal: AbortSignal, updates: TaskUpdat
       try {
         objectUrl = URL.createObjectURL(result);
         downloadId = await browser.downloads.download({
-          url: objectUrl, filename: filenameFor(candidate.title, videoId, extensionForMime(candidate.mime)),
+          url: objectUrl, filename: filenameFor(candidate.title, extensionForMime(candidate.mime)),
           saveAs: false, conflictAction: 'uniquify'
         });
       } catch {

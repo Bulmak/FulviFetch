@@ -1,7 +1,9 @@
 # FulviFetch: prototipo para Firefox
 
 Extensión independiente para descargar el audio original de videos públicos de
-YouTube. La versión 0.3.2 se usa desde un popup en la barra de herramientas.
+YouTube. La versión 0.3.4 se usa desde un popup en la barra de herramientas.
+
+Descarga el audio directamente a tu equipo. No utiliza analítica.
 
 ## Instalar o actualizar la prueba
 
@@ -14,32 +16,40 @@ El paquete ya está preparado en este computador.
 4. Abre el menú de extensiones, localiza **FulviFetch** y fija su
    botón a la barra de herramientas si quieres tenerlo siempre visible.
 5. Pulsa el icono: se abre un panel pequeño, sin crear una pestaña.
-6. Pega un enlace o pulsa **Usar video actual**, y después **Descargar audio**.
+6. Pulsa **Capturar y descargar** para descargar el audio del video de la pestaña.
+   Para pegar otro enlace, pulsa **O pega el link aquí** y después **Descargar**.
 7. Puedes cerrar y volver a abrir el panel: la tarea continúa en segundo plano.
 
-También puedes seleccionar `artifacts/fulvifetch-0.3.2.zip` desde el
-diálogo de carga temporal. Comprueba que el panel muestre **0.3.2**.
+También puedes seleccionar `artifacts/fulvifetch-0.3.4.zip` desde el
+diálogo de carga temporal. Comprueba que el panel muestre **0.3.4**.
 
-El archivo se guarda en `FulviFetch`, dentro de las descargas de Firefox.
+El archivo se guarda directamente en la carpeta de descargas de Firefox.
+El nombre utiliza solo el título y la extensión, sin añadir el identificador del video.
 Puede aparecer un diálogo de guardado según tu configuración. No necesitas
 reproducir el video. El botón muestra un indicador durante la descarga y una
 marca al terminar; el panel recupera el progreso o el último resultado.
 
-La instalación temporal desaparece al reiniciar Firefox. La instalación
-permanente mediante un XPI firmado por Mozilla sigue pendiente.
+La instalación temporal desaparece al reiniciar Firefox. La versión publicada
+0.3.2 tiene un XPI firmado por Mozilla; esta prueba 0.3.4 todavía debe firmarse
+para distribuirla como actualización permanente.
 Se requiere Firefox 142 o posterior; se probó en Firefox 158.0 sobre Windows.
 
 ## Funciones y límites
 
+- Paleta del zorro chilote: fondo carbón, superficies grises y acentos cobre.
+
 - Un video y una descarga activa para toda la extensión, aunque haya varios paneles.
-- Detección del video de la pestaña activa al abrir el panel o pulsar su botón.
+- Al abrir el panel, el enlace queda vacío si no hay una descarga activa.
+- **Capturar y descargar** obtiene el video actual e inicia la descarga con un clic.
+- **O pega el link aquí** despliega el campo y el botón **Descargar**.
+- La captura solo consulta la pestaña al pulsar el botón y no reutiliza enlaces anteriores.
 - Se prefiere M4A/AAC: se reempaqueta localmente para mejorar su reproducción,
   conservando los paquetes AAC sin recodificar. WebM se guarda sin ese paso.
 - Transferencia por fragmentos, comprobación de rangos e integridad y cancelación.
 - Alternativa iOS si el primer cliente no ofrece audio; verificada con un video
   marcado para niños. No garantiza compatibilidad con todos esos videos.
 - Renovación limitada de URLs rechazadas por HTTP 403/410.
-- Diagnóstico copiable sin direcciones del audio, cookies ni tokens.
+- Estado de descarga y mensajes de error en el popup.
 - Solo videos públicos accesibles sin cuenta; no se admiten directos.
 - Límite provisional de 64 MiB tanto al descargar como al preparar el archivo.
   No convierte a MP3 ni recorta todavía. El reempaquetado puede aumentar el tamaño
@@ -95,7 +105,7 @@ No se usa Vite como servidor: Firefox carga archivos estáticos empaquetados.
 ## Pruebas de navegador
 
 `scripts/browser-check.mjs` usa Selenium, Geckodriver y un perfil desechable.
-Abre el popup nativo desde la barra, verifica el video actual, cierra y reabre
+Abre el popup nativo desde la barra, comprueba la selección manual del video, cierra y reabre
 el panel durante descargas reales, comprueba archivos guardados, enlaces
 inválidos y cancelación, y verifica que no se hayan abierto pestañas adicionales.
 
@@ -127,7 +137,7 @@ Selenium busca puertos en `127.0.0.1`; no requiere abrir el firewall a redes pú
 ## Dependencias y referencias
 
 Se incluyen YouTube.js 18.2.0 y Mediabunny 1.61.6. La compilación reúne sus licencias
-en `dist/THIRD_PARTY_NOTICES.txt`, accesible desde el apartado de diagnóstico.
+en `dist/THIRD_PARTY_NOTICES.txt`, accesible desde el enlace Licencias del pie.
 Mediabunny se distribuye bajo MPL-2.0, sin modificar su código fuente. Se incluye
 la licencia y la dirección del paquete original con su fuente. El uso privado
 no exige publicar nuestro código; al distribuir se conservan los avisos y se

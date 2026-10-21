@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "FulviFetch",
-  "version": "0.3.2",
-  "description": "Descarga experimental de audio público de YouTube, dentro de Firefox.",
+  "version": "0.3.4",
+  "description": "Descarga audio de videos públicos de YouTube directamente a tu equipo. Sin analítica.",
   "permissions": [
     "downloads",
     "webRequest",
@@ -25,8 +25,10 @@
     "default_title": "FulviFetch",
     "default_popup": "index.html",
     "default_icon": {
-      "32": "icons/audio.svg",
-      "48": "icons/audio.svg"
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "64": "icons/icon-64.png"
     }
   },
   "content_security_policy": {
@@ -44,7 +46,11 @@
     }
   },
   "icons": {
-    "48": "icons/audio.svg",
-    "96": "icons/audio.svg"
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "64": "icons/icon-64.png",
+    "96": "icons/icon-96.png",
+    "128": "icons/icon-128.png"
   }
 }

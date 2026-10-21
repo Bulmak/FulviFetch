@@ -163,6 +163,6 @@ export async function* audioCandidates(videoId: string, signal: AbortSignal, rep
   }
   if (unavailable === clients.length) throw new DownloadFailure('VIDEO_UNAVAILABLE', 'YouTube indica que el video no está disponible. Prueba otro enlace público.');
   throw new DownloadFailure(total ? 'ALL_DOWNLOADS_FAILED' : 'NO_DIRECT_AUDIO', total
-    ? 'YouTube ofreció formatos, pero no permitió completar su descarga. Copia el diagnóstico para revisar esta prueba.'
+    ? 'YouTube ofreció audio, pero no permitió completar su descarga. Vuelve a intentarlo más tarde o prueba otro video.'
     : 'No se obtuvo audio directo. El video puede requerir acceso con cuenta, tokens o un método todavía no implementado.');
 }

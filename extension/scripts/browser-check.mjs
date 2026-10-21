@@ -6,7 +6,7 @@ const {Builder, By, until} = await import('selenium-webdriver');
 const {default: firefox} = await import('selenium-webdriver/firefox.js');
 import assert from 'node:assert/strict';
 import {mkdir, readdir, readFile, writeFile, cp, stat} from 'node:fs/promises';
-import {resolve} from 'node:path';
+import {resolve, dirname, basename} from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {videoIdFromUrl} from '../src/core.ts';
 const root = resolve(import.meta.dirname, '..');
@@ -92,7 +92,7 @@ const snapshot = () => popup('return browser.runtime.sendMessage({type:"GET_TASK
 const args = process.argv.slice(2).length ? process.argv.slice(2) : ['jNQXAC9IVRw'];
 try {
   await driver.installAddon(archive, true);
-  // Load a YouTube video with autoplay blocked to verify "use current video".
+  // Load a YouTube video with autoplay blocked to check explicit capture.
   await driver.get('https://www.youtube.com/watch?v=jNQXAC9IVRw');
   await driver.setContext('chrome');
   const initialTabs = await driver.executeScript(() => gBrowser.tabs.length);
@@ -101,21 +101,38 @@ try {
   await driver.executeScript(() => window.CustomizableUI.addWidgetToArea('audio-local_bulmak_local-browser-action', window.CustomizableUI.AREA_NAVBAR));
   await openPopup();
   console.log('Estado inicial: ' + JSON.stringify(await popup('return {url:document.getElementById("url").value,status:document.getElementById("status").textContent,detail:document.getElementById("detail").textContent}')));
-  await driver.wait(async () => await popup('return document.getElementById("url").value') === 'https://www.youtube.com/watch?v=jNQXAC9IVRw', 10000, 'No se detectó el video activo.');
+  assert.equal(await popup('return document.getElementById("url").value'), '', 'El popup no debe obtener el enlace al abrirse.');
+  assert.equal(await popup('return document.getElementById("download-form").hidden'), true);
+  assert.equal(await popup('return document.getElementById("show-link").getAttribute("aria-expanded")'), 'false');
+  assert.equal(await popup('return getComputedStyle(document.getElementById("show-link")).textDecorationLine'), 'underline');
   const dimensions = await popup('return {width:document.body.scrollWidth, height:document.body.offsetHeight, overflow:document.documentElement.scrollWidth > window.innerWidth}');
   assert.equal(dimensions.width, 390); assert.equal(dimensions.overflow, false);
   await capture('popup-idle');
-  console.log('Popup nativo abierto; video actual detectado; ancho de 390 px.');
-  for (const value of args) {
+  console.log('Popup sin captura automática; formulario oculto y enlace subrayado; ancho de 390 px.');
+  for (const [index, value] of args.entries()) {
+    const previousDownloads = new Set(await popup('return browser.downloads.search({}).then(items => items.map(item => item.id))'));
     const inputUrl = /^https?:\/\//.test(value) ? value : 'https://www.youtube.com/watch?v=' + value;
     const id = videoIdFromUrl(inputUrl);
-    await popup('document.getElementById("url").value = ' + JSON.stringify(inputUrl) + '; document.getElementById("download-form").requestSubmit();');
+    if (index === 0 && id === 'jNQXAC9IVRw') {
+      await popup('document.getElementById("current-video").click(); document.getElementById("current-video").click();');
+      console.log('Capturar y descargar inicia la tarea con un clic; se ignora un segundo clic.');
+    } else {
+      if (await popup('return document.getElementById("download-form").hidden')) await popup('document.getElementById("show-link").click();');
+      assert.equal(await popup('return document.getElementById("download-form").hidden'), false);
+      assert.equal(await popup('return document.getElementById("show-link").getAttribute("aria-expanded")'), 'true');
+      assert.equal(await popup('return document.activeElement.id'), 'url');
+      await capture('popup-manual');
+      await popup('document.getElementById("url").value = ' + JSON.stringify(inputUrl) + '; document.getElementById("download-form").requestSubmit();');
+    }
     await driver.wait(async () => (await snapshot()).active, 5000);
+    assert.equal((await snapshot()).diagnostic.videoId, id);
     await closePopup();
     console.log('Popup cerrado durante ' + closeMs + ' ms; sin pestañas de la extensión.');
     await new Promise(resolve => setTimeout(resolve, closeMs));
     await openPopup();
     let state = await snapshot();
+    assert.equal(await popup('return document.getElementById("download-form").hidden'), true);
+    assert.equal(await popup('return document.getElementById("url").value'), state.active ? 'https://www.youtube.com/watch?v=' + id : '', 'Solo una tarea activa debe recuperar su enlace al reabrir.');
     console.log('Estado al reabrir: ' + state.status + '; bytes recibidos: ' + state.received);
     let last = '';
     await driver.wait(async () => {
@@ -126,9 +143,11 @@ try {
     assert.equal(state.diagnostic.result, 'complete', JSON.stringify(state.diagnostic));
     assert.equal(await driver.executeScript(() => gBrowser.tabs.length), initialTabs);
     if (deniedOffset !== null) assert.ok(state.diagnostic.events.some(event => event.refresh > 0), 'No se ejercitó el 403.');
-    const downloads = await popup('return browser.downloads.search({state:"complete"}).then(items => items.map(item => ({filename:item.filename,bytes:item.fileSize})))');
-    const saved = downloads.find(item => item.filename.includes('[' + id + ']'));
+    const downloads = await popup('return browser.downloads.search({state:"complete"}).then(items => items.map(item => ({id:item.id,filename:item.filename,bytes:item.fileSize})))');
+    const saved = downloads.find(item => !previousDownloads.has(item.id));
     assert.ok(saved, 'El archivo no apareció en el gestor de descargas.');
+    assert.equal(basename(saved.filename).includes('[' + id + ']'), false, 'El nombre no debe incluir el identificador del video.');
+    assert.equal(dirname(saved.filename), output, 'El archivo debe guardarse directamente en la carpeta de descargas.');
     assert.equal((await stat(saved.filename)).size, state.diagnostic.bytes);
     const evidence = {...state.diagnostic, popupClosedMs: closeMs, testMediaDelayMs: delay, backgroundIdleTimeoutMs: idleTimeout};
     if (deniedOffset !== null) evidence.testFault = {http:403, offset:deniedOffset};
@@ -138,6 +157,27 @@ try {
     await capture(id + '-popup' + suffix);
     console.log(JSON.stringify({id, result:state.diagnostic.result, bytes:state.diagnostic.bytes, tabs:initialTabs}));
   }
+  // A finished task must not prefill a new popup. Simulate YouTube's navigation
+  // within the same document and check that capture starts the new video.
+  await closePopup();
+  await driver.setContext('content');
+  const nextId = videoIdFromUrl(/^https?:\/\//.test(args.at(-1)) ? args.at(-1) : 'https://www.youtube.com/watch?v=' + args.at(-1)) === 'llmbcMmZuQ4' ? 'jNQXAC9IVRw' : 'llmbcMmZuQ4';
+  await driver.executeScript(id => window.history.pushState(null, '', '/watch?v=' + id), nextId);
+  await driver.setContext('chrome');
+  await openPopup();
+  assert.equal(await popup('return document.getElementById("url").value'), '', 'No debe reaparecer el enlace de la descarga anterior.');
+  assert.equal(await popup('return document.getElementById("track-title").hidden'), true);
+  await popup('document.getElementById("current-video").click();');
+  await driver.wait(async () => (await snapshot()).active, 5000);
+  assert.equal((await snapshot()).diagnostic.videoId, nextId, 'La captura descargó el video anterior.');
+  await popup('document.getElementById("cancel").click();');
+  await driver.wait(async () => !(await snapshot()).active, 10000);
+  assert.equal((await snapshot()).diagnostic.result, 'cancelled');
+  await closePopup();
+  await openPopup();
+  assert.equal(await popup('return document.getElementById("url").value'), '', 'La selección manual no debe rellenar una apertura posterior.');
+  console.log('Después de cambiar de video, la captura inicia el nuevo; cancelar y reabrir conserva el formulario oculto.');
+  await popup('document.getElementById("show-link").click();');
   await popup('document.getElementById("url").value = "https://example.com/video"; document.getElementById("download-form").requestSubmit();');
   assert.equal(await popup('return document.getElementById("status").textContent'), 'Revisa el enlace');
   console.log('Enlace inválido rechazado en el popup.');
@@ -147,6 +187,18 @@ try {
   await driver.wait(async () => !(await snapshot()).active, 10000);
   assert.equal((await snapshot()).diagnostic.result, 'cancelled');
   console.log('Cancelación comprobada desde el popup.');
+  await closePopup();
+  await driver.setContext('content');
+  await driver.get('about:blank');
+  await driver.setContext('chrome');
+  await openPopup();
+  await popup('document.getElementById("current-video").click();');
+  await driver.wait(async () => await popup('return !document.getElementById("current-video").disabled'), 5000);
+  assert.equal((await snapshot()).diagnostic.result, 'cancelled');
+  assert.equal(await popup('return document.getElementById("status").textContent'), 'Revisa el enlace');
+  assert.ok((await popup('return document.getElementById("detail").textContent')).includes('Abre un video de YouTube'));
+  assert.equal(await popup('return document.getElementById("download-form").hidden'), true);
+  console.log('Capturar desde una página sin video no inicia una descarga ni reutiliza el enlace anterior.');
 } catch (error) {
   try { console.log('Fallo en popup: ' + JSON.stringify(await popup('return {html:document.body.innerText.slice(0,2000)}'))); } catch {}
   throw error;

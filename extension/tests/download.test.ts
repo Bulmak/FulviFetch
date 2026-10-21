@@ -10,8 +10,8 @@ for (const url of [`https://youtube.com.attacker.test/watch?v=${id}`, `https://u
   test(`Rechaza enlace fuera de alcance: ${url}`, () => assert.throws(() => videoIdFromUrl(url)));
 }
 test('El nombre no permite escapar de la carpeta de descargas', () => {
-  const name = filenameFor('../tema\\con:cortes?\u0000', id, 'm4a');
-  assert.equal(name.split('/').length, 2); assert.ok(!name.includes('..')); assert.ok(name.endsWith('.m4a'));
+  const name = filenameFor('../tema\\con:cortes?\u0000', 'm4a');
+  assert.equal(name.split('/').length, 1); assert.ok(!name.includes('\\')); assert.ok(!name.includes('..')); assert.ok(name.endsWith('.m4a'));
 });
 test('Los servidores de audio deben pertenecer a googlevideo por HTTPS', () => {
   assert.equal(validateMediaUrl('https://r1.googlevideo.com/videoplayback').hostname, 'r1.googlevideo.com');
@@ -100,15 +100,15 @@ test('Cancelar durante la renovación evita reanudar la transferencia', async t 
 });
 test('Normaliza espacios Unicode del título que Firefox rechaza al guardar', () => {
   const title = 'Modern Talking - Brother Louie (Official\u00a0Video)';
-  assert.equal(filenameFor(title, 'Lp2qcCrdBLA', 'm4a'),
-    'FulviFetch/Modern Talking - Brother Louie (Official Video) [Lp2qcCrdBLA].m4a');
+  assert.equal(filenameFor(title, 'm4a'),
+    'Modern Talking - Brother Louie (Official Video).m4a');
   for (const whitespace of ['\u00a0', '\u202f', '\u2007', '\u3000']) {
-    assert.equal(filenameFor('Tema' + whitespace + 'musical', id, 'm4a'),
-      'FulviFetch/Tema musical [' + id + '].m4a');
+    assert.equal(filenameFor('Tema' + whitespace + 'musical', 'm4a'),
+      'Tema musical.m4a');
   }
 });
 
 test('Normalizar espacios conserva acentos y títulos en otros idiomas', () => {
-  assert.equal(filenameFor('Canción\u00a0日本語', id, 'm4a'),
-    'FulviFetch/Canción 日本語 [' + id + '].m4a');
+  assert.equal(filenameFor('Canción\u00a0日本語', 'm4a'),
+    'Canción 日本語.m4a');
 });

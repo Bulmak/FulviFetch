@@ -1,46 +1,72 @@
+<p align="center">
+  <img src="extension/public/icons/icon-128.png" width="112" height="112" alt="Logo de FulviFetch">
+</p>
+
 # FulviFetch
 
-Extensión para Firefox que descarga el audio de videos públicos de YouTube desde
-un popup en la barra de herramientas. Versión actual: **0.3.2**.
+**Tu música, en tu equipo.**
 
-Funciona dentro del navegador: no requiere Python, FFmpeg, programas auxiliares
-ni un servidor. Guarda M4A/AAC o WebM; la conversión a MP3 y los recortes siguen
-pendientes.
+Extensión para Firefox que descarga el audio de videos públicos de YouTube
+directamente a tu equipo. Sin analítica.
 
-## Probar la extensión
+## Qué puedes hacer
 
-1. Abre `about:debugging#/runtime/this-firefox` en Firefox de escritorio.
-2. Pulsa **Cargar complemento temporal** y selecciona
-   `extension/dist/manifest.json`.
-3. Abre **FulviFetch** desde la barra, pega el enlace y pulsa
-   **Descargar audio**.
+- **Capturar y descargar** el audio del video abierto con un clic.
+- Pegar otro enlace mediante **O pega el link aquí**.
+- Guardar el audio original en **M4A/AAC o WebM**, según los formatos disponibles.
+- Continuar la descarga con el panel cerrado mientras Firefox siga abierto.
+- Consultar el progreso y cancelar la descarga desde el panel.
 
-Si ya la tienes instalada, pulsa **Recargar**. Puedes cerrar el popup durante la
-descarga. La instalación temporal desaparece al reiniciar Firefox.
+Los archivos se guardan directamente en la carpeta de descargas configurada en
+Firefox, con el título del video. Si ya existe un archivo con el mismo nombre,
+Firefox añade un número para evitar sobrescribirlo.
 
-Consulta la [guía de instalación y desarrollo](extension/README.md) para los
-permisos, requisitos y límites del prototipo.
+## Instalación
 
-## Organización
+Requiere **Firefox 142 o posterior** en escritorio. Se ha probado en Windows.
 
-| Carpeta | Contenido |
-| --- | --- |
-| [extension/](extension/) | Código, pruebas y configuración de la extensión |
-| `docs/` (solo local) | Plan, resultados de verificación y sugerencias |
-| `.local/audio/` | Audios personales y archivos de comparación conservados en este equipo |
-| `.local/tools/` | Herramientas opcionales para pruebas de desarrollo |
+1. Abre la sección de [Releases](https://github.com/Bulmak/FulviFetch/releases).
+2. Descarga el archivo **`.xpi` firmado por Mozilla** de la versión que quieras instalar.
+3. En Firefox, abre `about:addons` y pulsa el menú del engranaje.
+4. Elige **Instalar complemento desde archivo…** y selecciona el `.xpi`.
+5. Confirma la instalación y fija FulviFetch a la barra de herramientas.
 
-`docs/` y `.local/` están excluidos de Git. Las herramientas de esa carpeta se usan para
-comprobar el prototipo durante el desarrollo; no forman parte de la extensión.
+La versión firmada publicada es la **0.3.2**. El código de `main` corresponde a la
+**0.3.4**, preparada para solicitar una nueva firma. Las actualizaciones se
+instalan manualmente mediante el nuevo `.xpi`.
 
-Dentro de `extension/`, `src/` contiene el código, `public/` el manifiesto y los
-iconos, `tests/` las pruebas, `scripts/` la automatización y `licenses/` los avisos
-auxiliares. `node_modules/`, `dist/`, `artifacts/` y `.test-artifacts/` son carpetas
-locales generadas, excluidas de Git.
+## Cómo usarlo
+
+Abre un video de YouTube, pulsa el icono de FulviFetch y selecciona
+**Capturar y descargar**. El enlace se obtiene al pulsar el botón; no necesitas
+reproducir el video.
+
+Para descargar desde otro enlace, pulsa **O pega el link aquí**, pega la URL y
+selecciona **Descargar**. Puedes cerrar el panel y volver a abrirlo para consultar
+el progreso.
+
+## Privacidad
+
+FulviFetch no utiliza analítica ni servidores propios. Las peticiones para
+obtener y descargar el audio se realizan directamente a YouTube y sus servidores
+de contenido. El procesamiento del archivo se realiza dentro del navegador.
+
+## Límites actuales
+
+- Una descarga activa a la vez.
+- Solo videos públicos accesibles sin iniciar sesión; no admite directos.
+- Límite de **64 MiB** tanto para el audio descargado como para el archivo preparado.
+- Todavía no convierte a MP3, recorta audio ni descarga listas completas.
+- Cerrar Firefox o desactivar la extensión interrumpe la descarga.
+- Chrome, Edge y Android todavía no cuentan con una versión probada.
+- Los cambios de YouTube pueden afectar la disponibilidad de algunos videos.
 
 ## Desarrollo
 
-Se necesita Node.js para compilar y probar el proyecto:
+Se utilizó **Node.js 24.14.1** con **npm 11.11.0**. Node.js solo es necesario para
+desarrollar y compilar la extensión.
+
+Desde una terminal de Windows, en la raíz del repositorio:
 
 ```powershell
 cd extension
@@ -50,4 +76,19 @@ npm.cmd run package
 npm.cmd run lint:extension
 ```
 
-El empaquetado genera `extension/dist/` y el ZIP en `extension/artifacts/`.
+La compilación genera `extension/dist/` y el ZIP de instalación temporal en
+`extension/artifacts/`. Para probarla, abre
+`about:debugging#/runtime/this-firefox`, pulsa **Cargar complemento temporal** y
+selecciona `extension/dist/manifest.json`. Esa instalación desaparece al
+reiniciar Firefox.
+
+Consulta la [guía de desarrollo](extension/README.md) para conocer la arquitectura
+y las pruebas de navegador.
+
+## Herramientas utilizadas
+
+- [YouTube.js](https://github.com/LuanRT/YouTube.js): obtiene la información y los formatos de audio.
+- [Mediabunny](https://github.com/Vanilagy/mediabunny): prepara los archivos M4A localmente, conservando el audio AAC sin recodificar.
+
+Las licencias de las dependencias incluidas se pueden consultar desde el enlace
+**Licencias** del panel de FulviFetch.

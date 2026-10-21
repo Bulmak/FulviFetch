@@ -4,24 +4,28 @@
 <body>
   <main>
     <header>
-      <img src="/icons/audio.svg" width="38" height="38" alt="">
+      <img src="/icons/icon-48.png" srcset="/icons/icon-96.png 2x" width="38" height="38" alt="">
       <div><h1>FulviFetch</h1><p>Tu música, en tu equipo.</p></div>
       <span class="version" id="build-version"></span>
     </header>
-    <form id="download-form">
-      <div class="field-heading"><label for="url">Enlace de YouTube</label><button id="current-video" type="button">Usar video actual</button></div>
-      <input id="url" type="url" required autocomplete="off" placeholder="Pega el enlace de un video">
+    <section class="download-controls" aria-label="Descargar audio">
+      <button id="current-video" type="button" disabled>Capturar y descargar <span aria-hidden="true">↓</span></button>
+      <button id="show-link" type="button" aria-controls="download-form" aria-expanded="false" disabled>O pega el link aquí</button>
+      <form id="download-form" hidden>
+        <label for="url">Enlace de YouTube</label>
+        <input id="url" type="url" required autocomplete="off" placeholder="Pega el enlace de un video">
+        <button id="download" type="submit">Descargar <span aria-hidden="true">↓</span></button>
+      </form>
       <p id="track-title" hidden></p>
-      <div class="actions"><button id="download" type="submit">Descargar audio <span aria-hidden="true">↓</span></button><button id="cancel" type="button" disabled>Cancelar</button></div>
-    </form>
+      <button id="cancel" type="button" hidden disabled>Cancelar descarga</button>
+    </section>
     <section id="result" aria-live="polite" aria-atomic="false" data-result="idle">
       <div class="status-heading"><span class="status-dot" aria-hidden="true"></span><h2 id="status">Conectando…</h2></div>
       <p id="detail">Recuperando el estado de la descarga.</p>
       <progress id="progress" hidden aria-label="Progreso de descarga"></progress>
     </section>
     <p class="note">Puedes cerrar este panel: la descarga continúa mientras Firefox siga abierto.</p>
-    <footer><span>Audio original · M4A / WebM</span><span>Hasta 64 MiB</span></footer>
-    <details><summary>Diagnóstico</summary><p>Sin direcciones del audio, cookies ni tokens.</p><pre id="diagnostic">Sin pruebas todavía.</pre><button id="copy-diagnostic" type="button">Copiar diagnóstico</button><p><a href="./THIRD_PARTY_NOTICES.txt" target="_blank" rel="noopener">Licencias y avisos de terceros</a></p></details>
+    <footer><span>Audio original · M4A / WebM</span><span>Hasta 64 MiB</span><a href="./THIRD_PARTY_NOTICES.txt" target="_blank" rel="noopener">Licencias</a></footer>
   </main>
   <script type="module" src="/src/app.ts"></script>
 </body>

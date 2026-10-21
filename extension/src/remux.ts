@@ -70,7 +70,7 @@ export async function remuxM4a(
   } catch (error) {
     signal.throwIfAborted();
     if (error instanceof DownloadFailure) throw error;
-    throw new DownloadFailure('REMUX_FAILED', 'No se pudo preparar un M4A compatible. Copia el diagnóstico para revisar el archivo.');
+    throw new DownloadFailure('REMUX_FAILED', 'No se pudo preparar un M4A compatible. Vuelve a intentarlo o prueba otro video.');
   } finally {
     signal.removeEventListener('abort', abort);
     input.dispose();

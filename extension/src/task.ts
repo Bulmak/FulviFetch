@@ -79,7 +79,7 @@ export class DownloadTask {
       signal.throwIfAborted();
       Object.assign(this.state.diagnostic, metadata);
       this.state.status = 'Audio guardado'; this.state.diagnostic.result = 'complete';
-      updates.report('Encontrarás el archivo en FulviFetch, dentro de tus descargas.');
+      updates.report('Encontrarás el archivo en tu carpeta de descargas.');
     } catch (error) {
       this.state.diagnostic.phase = this.state.status;
       this.state.diagnostic.received = this.state.received;
@@ -89,7 +89,7 @@ export class DownloadTask {
       this.state.diagnostic.code = signal.aborted ? 'CANCELLED' : error instanceof DownloadFailure ? error.code : 'NETWORK_OR_EXTRACTOR_ERROR';
       updates.report(signal.aborted ? 'Puedes volver a intentarlo con el mismo enlace.'
         : error instanceof DownloadFailure ? error.message
-        : 'No se pudo comunicar con YouTube. Copia el diagnóstico para revisar el fallo.');
+        : 'No se pudo comunicar con YouTube. Comprueba tu conexión y vuelve a intentarlo.');
     }
   }
   cancel() { this.controller?.abort(new DOMException('Cancelado', 'AbortError')); }
