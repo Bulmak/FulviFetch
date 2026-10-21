@@ -103,10 +103,10 @@ archivo guardado; reiniciar Firefox no borra las preferencias.
 
 | ID | Specs | Ruta | Riesgo | Commit |
 | --- | --- | --- | --- | --- |
-| T1 | S1, S2, S3 | inline | item 3 (contrato del estado y del protocolo) | pendiente |
-| T2 | S4, S5, S6 | inline | ninguno | pendiente |
-| T3 | S7 | inline | ninguno | pendiente |
-| T4 | S8, S9, S10 | inline | ninguno | pendiente |
+| T1 | S1, S2, S3 | inline | item 3 (contrato del estado y del protocolo) | `ed621c0` |
+| T2 | S4, S5, S6 | inline | ninguno | `d94d796` |
+| T3 | S7 | inline | ninguno | `78be438` |
+| T4 | S8, S9, S10 | inline | ninguno | `4928693` |
 
 Ruta declarada: **inline** para las cuatro unidades. No hay razón de Writer:
 las unidades comparten `src/background.ts`, `src/app.ts` y el manifiesto, así
@@ -137,3 +137,11 @@ por unidad de trabajo. Lo eligió la persona usuaria.
   el bitrate, y el extractor ya elige el mayor; una opción de "calidad
   normal" obligaba a definir un criterio que no existe. La carátula sí es una
   decisión clara del usuario y encaja con los metadatos de T3.
+- Verificación por unidad: `npm run typecheck`, `npm test`, `npm run build` y
+  `npm run lint:extension` en verde al cerrar cada commit. La suite pasó de
+  57 a 80 pruebas.
+- T1 lleva además una comprobación de cola en `scripts/browser-check.mjs`:
+  envía dos enlaces seguidos y comprueba que el segundo queda en cola y que
+  los dos videos se guardan.
+- Pendiente de una prueba en un Firefox real: la comprobación de navegador no
+  se puede ejecutar en el equipo donde se escribió el código.

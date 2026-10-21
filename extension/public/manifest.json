@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "FulviFetch",
-  "version": "0.3.3",
+  "version": "0.4.0",
   "description": "Descarga experimental de audio público de YouTube, dentro de Firefox.",
   "permissions": [
     "downloads",

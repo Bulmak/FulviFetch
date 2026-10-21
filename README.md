@@ -1,7 +1,7 @@
 # FulviFetch
 
 Extensión para Firefox que descarga el audio de videos públicos de YouTube desde
-un popup en la barra de herramientas. Versión actual: **0.3.3**.
+un popup en la barra de herramientas. Versión actual: **0.4.0**.
 
 Funciona dentro del navegador: no requiere Python, FFmpeg, programas auxiliares
 ni un servidor. Guarda M4A/AAC o WebM; la conversión a MP3 y los recortes siguen
