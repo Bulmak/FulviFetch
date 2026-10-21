@@ -194,3 +194,27 @@ test('Un error al guardar conserva su fase y no se presenta como un fallo de red
   assert.equal(state.diagnostic.total, 100);
   assert.equal(state.detail, 'Firefox no pudo guardar el audio.');
 });
+
+test('El estado final queda guardado antes de que la tarea termine', async () => {
+  const written: string[] = [];
+  const task = new DownloadTask('test', async () => ({}), async state => {
+    // La escritura tarda: si no se esperara, la tarea se daría por terminada
+    // con el estado final todavía sin guardar.
+    await new Promise(done => setTimeout(done, 10));
+    written.push(state.status);
+  });
+  task.submit(url);
+  await task.whenIdle();
+  assert.ok(written.includes('Audio guardado'), 'El estado final no se guardó a tiempo: ' + written.join(', '));
+});
+
+test('persisted() espera a la última escritura', async () => {
+  let done = false;
+  const task = new DownloadTask('test', async () => ({}), async () => {
+    await new Promise(resolve => setTimeout(resolve, 10));
+    done = true;
+  });
+  task.submit(url);
+  await task.persisted();
+  assert.equal(done, true);
+});

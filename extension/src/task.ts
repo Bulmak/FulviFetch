@@ -24,6 +24,9 @@ export interface TaskUpdates {
   metadata(data: EventData): void;
 }
 export type Executor = (videoId: string, signal: AbortSignal, updates: TaskUpdates) => Promise<EventData>;
+// El publicador puede devolver una promesa: la tarea la espera antes de dar
+// por guardado un estado.
+export type Changed = (state: TaskState) => void | Promise<void>;
 
 // Límite de descargas pendientes: evita que la cola crezca sin control.
 export const MAX_QUEUE = 20;
@@ -39,13 +42,14 @@ export class DownloadTask {
   private state: TaskState;
   private version: string;
   private execute: Executor;
-  private changed: (state: TaskState) => void;
+  private changed: Changed;
+  private lastWrite: Promise<void> = Promise.resolve();
   private pending: QueueItem[] = [];
   private running = false;
   private sequence = 0;
   private idle: Array<() => void> = [];
   private interruption?: string;
-  constructor(version: string, execute: Executor, changed: (state: TaskState) => void = () => {}) {
+  constructor(version: string, execute: Executor, changed: Changed = () => {}) {
     this.version = version; this.execute = execute; this.changed = changed;
     this.state = {version, revision: 0, active: false, url: '', status: 'Listo para comenzar',
       detail: 'Audio original en M4A o WebM.', title: '', received: 0, total: 0, queue: [],
@@ -115,15 +119,29 @@ export class DownloadTask {
   // Cancela la descarga en curso; la cola continúa con el siguiente elemento.
   cancel() { this.controller?.abort(new DOMException('Cancelado', 'AbortError')); }
 
-  // Resuelve cuando no queda nada en curso ni pendiente.
-  whenIdle(): Promise<TaskState> {
-    if (!this.running && this.pending.length === 0) return Promise.resolve(this.snapshot());
+  // Resuelve cuando no queda nada en curso ni pendiente y el último estado
+  // publicado está guardado.
+  async whenIdle(): Promise<TaskState> {
+    if (!this.running && this.pending.length === 0) {
+      await this.lastWrite;
+      return this.snapshot();
+    }
     return new Promise(resolve => { this.idle.push(() => resolve(this.snapshot())); });
   }
 
+  // Resuelve cuando el último estado publicado está guardado en el
+  // almacenamiento. El panel lo espera antes de confirmar un enlace.
+  persisted(): Promise<void> { return this.lastWrite; }
+
   private nextId(videoId: string) { return `${videoId}-${++this.sequence}`; }
   private syncQueue() { this.state.queue = this.pending.map(item => ({...item})); }
-  private publish() { this.state.revision++; this.changed(this.snapshot()); }
+  // Publica el estado y devuelve la promesa de su escritura: quien publica
+  // puede esperar a que el estado quede guardado.
+  private publish(): Promise<void> {
+    this.state.revision++;
+    this.lastWrite = Promise.resolve(this.changed(this.snapshot())).catch(() => undefined);
+    return this.lastWrite;
+  }
   private settle() { const waiters = this.idle; this.idle = []; for (const resolve of waiters) resolve(); }
 
   private startNext() {
@@ -159,11 +177,13 @@ export class DownloadTask {
         this.publish();
       }
     };
-    void this.run(item.videoId, controller.signal, updates).finally(() => {
+    void this.run(item.videoId, controller.signal, updates).finally(async () => {
       this.controller = undefined;
       this.running = false;
       this.state.active = false;
-      this.publish();
+      // El estado final se espera: no se da la tarea por terminada hasta que
+      // está guardado en el almacenamiento.
+      await this.publish();
       if (this.pending.length) this.startNext();
       else this.settle();
     });

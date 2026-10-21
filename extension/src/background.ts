@@ -21,10 +21,17 @@ const writer = createThrottledWriter<TaskState>(async state => {
   ]);
 }, 200);
 
-function publish(state: TaskState) {
+let lastQueueLength = -1;
+let lastActive = false;
+
+function publish(state: TaskState): Promise<void> {
+  // Un cambio de cola o el final de la tarea no pueden esperar al intervalo:
+  // se guardan de inmediato y se espera a que estén en el almacenamiento.
+  const notable = state.active !== lastActive || state.queue.length !== lastQueueLength;
+  lastActive = state.active;
+  lastQueueLength = state.queue.length;
   writer.push(state);
-  // El estado final no puede esperar al intervalo.
-  if (!state.active) void writer.flush();
+  return notable ? writer.flush() : Promise.resolve();
 }
 
 function waitForSave(id: number, signal: AbortSignal): Promise<void> {
@@ -181,8 +188,10 @@ browser.runtime.onMessage.addListener((message: unknown, sender) => {
       // waits are bounded to 15/20 s, below Firefox's normal 30 s idle timeout.
       // An invalid link or a full queue throws here and reaches the panel.
       task.submit(input, label);
-      return task.snapshot();
-    });
+      // La cola se guarda antes de confirmar: si Firefox descarga el proceso
+      // de fondo, el enlace encolado no se pierde.
+      return task.persisted();
+    }).then(() => task.snapshot());
   }
   return false;
 });
