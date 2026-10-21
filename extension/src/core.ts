@@ -28,6 +28,13 @@ export function validateMediaUrl(value: string): URL {
   }
   return url;
 }
+export function validateImageUrl(value: string): URL {
+  const url = new URL(value);
+  if (url.protocol !== 'https:' || url.hostname !== 'i.ytimg.com' || url.port || url.username || url.password) {
+    throw new DownloadFailure('INVALID_IMAGE_URL', 'La dirección de la carátula no pertenece a los servidores admitidos.');
+  }
+  return url;
+}
 export function extensionForMime(mime: string): 'm4a' | 'webm' {
   const base = (mime.split(';')[0] ?? '').trim().toLowerCase();
   if (base === 'audio/mp4') return 'm4a';

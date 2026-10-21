@@ -51,7 +51,8 @@
   "host_permissions": [
     "https://www.youtube.com/*",
     "https://youtubei.googleapis.com/*",
-    "https://*.googlevideo.com/*"
+    "https://*.googlevideo.com/*",
+    "https://i.ytimg.com/*"
   ],
   "background": {
     "scripts": [
@@ -68,7 +69,7 @@
     }
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'none'; frame-src 'none'; connect-src 'self' https://www.youtube.com https://youtubei.googleapis.com https://*.googlevideo.com"
+    "extension_pages": "script-src 'self'; object-src 'none'; frame-src 'none'; connect-src 'self' https://www.youtube.com https://youtubei.googleapis.com https://*.googlevideo.com https://i.ytimg.com"
   },
   "browser_specific_settings": {
     "gecko": {

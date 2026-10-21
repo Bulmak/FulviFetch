@@ -32,8 +32,7 @@ async function packets(blob: Blob) {
     return {payloads, config: await track.getDecoderConfig(), duration: await track.computeDuration()};
   } finally { input.dispose(); }
 }
-test('Reempaqueta un MP4 fragmentado sin cambiar paquetes, configuración ni duración', async () => {
-  const original = await fixture();
+test('Reempaqueta un MP4 fragmentado sin cambiar paquetes, configuración ni duración', async () => {  const original = await fixture();
   const prepared = await remuxM4a(original, new AbortController().signal);
   const before = await packets(original), after = await packets(prepared.blob);
   assert.equal(prepared.packets, before.payloads.length);
@@ -66,4 +65,35 @@ test('Rechaza datos dañados en lugar de guardarlos como audio preparado', async
 test('Aplica el límite de tamaño antes de leer el archivo', async () => {
   const oversized = new Blob([new Uint8Array(64 * 1024 * 1024 + 1)]);
   await assert.rejects(remuxM4a(oversized, new AbortController().signal), {code: 'TOO_LARGE'});
+});
+
+test('Escribe título, autor y carátula sin tocar el audio', async () => {
+  const original = await fixture();
+  const cover = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
+  const prepared = await remuxM4a(original, new AbortController().signal, () => {}, {
+    title: 'Canción', artist: 'Artista', cover: {data: cover, mimeType: 'image/jpeg'}
+  });
+  const input = new Input({formats: [MP4], source: new BlobSource(prepared.blob)});
+  try {
+    const tags = await input.getMetadataTags();
+    assert.equal(tags.title, 'Canción');
+    assert.equal(tags.artist, 'Artista');
+    assert.equal(tags.images?.length, 1);
+    assert.equal(tags.images?.[0]?.mimeType, 'image/jpeg');
+    assert.deepEqual(Array.from(tags.images?.[0]?.data ?? []), Array.from(cover));
+  } finally { input.dispose(); }
+  const before = await packets(original), after = await packets(prepared.blob);
+  assert.deepEqual(after.payloads.map(packet => packet.data), before.payloads.map(packet => packet.data));
+  assert.deepEqual(after.config, before.config);
+});
+
+test('Sin metadatos el archivo se prepara igual que antes', async () => {
+  const original = await fixture();
+  const prepared = await remuxM4a(original, new AbortController().signal);
+  const input = new Input({formats: [MP4], source: new BlobSource(prepared.blob)});
+  try {
+    const tags = await input.getMetadataTags();
+    assert.equal(tags.title, undefined);
+    assert.equal(tags.artist, undefined);
+  } finally { input.dispose(); }
 });

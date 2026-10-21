@@ -1,5 +1,5 @@
 import {audioCandidates, installRequestHeaders} from './extractor.ts';
-import {downloadAudio} from './media.ts';
+import {downloadAudio, fetchImage} from './media.ts';
 import {remuxM4a} from './remux.ts';
 import {DownloadFailure, extensionForMime, filenameFor} from './core.ts';
 import {DownloadTask, type TaskState, type TaskUpdates} from './task.ts';
@@ -78,6 +78,8 @@ async function transfer(videoId: string, signal: AbortSignal, updates: TaskUpdat
       }
       signal.throwIfAborted();
       if (extensionForMime(candidate.mime) === 'm4a') {
+        // La carátula es un extra: si no se puede conseguir, la descarga sigue.
+        const cover = await fetchImage(candidate.cover, signal);
         updates.phase('Preparando el archivo');
         report('Preparando el audio para guardarlo.');
         let lastProgress = performance.now();
@@ -86,6 +88,10 @@ async function transfer(videoId: string, signal: AbortSignal, updates: TaskUpdat
             lastProgress = performance.now();
             report('Preparando el audio para guardarlo.', {packets: copied, totalPackets: total});
           }
+        }, {
+          title: candidate.title,
+          artist: candidate.artist,
+          ...(cover ? {cover: {data: cover, mimeType: 'image/jpeg'}} : {})
         });
         result = prepared.blob;
         updates.metadata({remuxer: 'mediabunny 1.61.6', remuxPackets: prepared.packets,

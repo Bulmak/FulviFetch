@@ -113,6 +113,20 @@ function sessionFetch(signal: AbortSignal, context: PlaybackContext | null, repo
   };
 }
 
+// Metadatos descriptivos que se guardan junto al audio.
+interface VideoMetadata { artist?: string; cover?: string; }
+
+function metadataFrom(basic: {
+  author?: string;
+  channel?: {name: string} | null;
+  thumbnail?: Array<{url: string; width: number; height: number}>;
+}): VideoMetadata {
+  const artist = basic.author || basic.channel?.name || undefined;
+  const thumbnails = basic.thumbnail ?? [];
+  const best = thumbnails.slice().sort((a, b) => b.width - a.width)[0];
+  return {artist, cover: best?.url};
+}
+
 export async function* audioCandidates(videoId: string, signal: AbortSignal, report: Report): AsyncGenerator<Candidate> {
   const context = await pageContext(videoId, signal).catch(() => { signal.throwIfAborted(); return null; });
   const api = await Innertube.create({
@@ -138,7 +152,8 @@ export async function* audioCandidates(videoId: string, signal: AbortSignal, rep
       report(formats.length ? 'Audio disponible; preparando la descarga.' : 'Este método no ofreció un archivo descargable.', {client, formats: formats.length});
       for (const format of formats.slice(0, 3)) {
         total++;
-        const candidate: Candidate = {url: format.url!, mime: format.mime_type, title: info.basic_info.title || 'Audio', videoId, itag: format.itag, size: format.content_length, client, audioTrack: format.audio_track?.id};
+        const meta = metadataFrom(info.basic_info);
+        const candidate: Candidate = {url: format.url!, mime: format.mime_type, title: info.basic_info.title || 'Audio', videoId, itag: format.itag, size: format.content_length, client, audioTrack: format.audio_track?.id, artist: meta.artist, cover: meta.cover};
         candidate.refresh = async refreshSignal => {
           refreshSignal.throwIfAborted();
           const freshContext = await pageContext(videoId, refreshSignal);

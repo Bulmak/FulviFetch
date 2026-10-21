@@ -1,6 +1,7 @@
 import {
   Input, MP4, BlobSource, EncodedPacketSink,
-  Output, Mp4OutputFormat, BufferTarget, EncodedAudioPacketSource
+  Output, Mp4OutputFormat, BufferTarget, EncodedAudioPacketSource,
+  type MetadataTags
 } from 'mediabunny';
 import {DownloadFailure, checkSize} from './core.ts';
 
@@ -8,9 +9,18 @@ export interface RemuxResult {
   blob: Blob; packets: number; inputBytes: number; outputBytes: number; milliseconds: number;
 }
 
+// Metadatos descriptivos del archivo. No cambian el audio: solo se añaden al
+// contenedor.
+export interface MediaTags {
+  title?: string;
+  artist?: string;
+  cover?: {data: Uint8Array; mimeType: string};
+}
+
 // Copy compressed AAC packets, without AudioDecoder, AudioEncoder, WASM or network access.
 export async function remuxM4a(
-  blob: Blob, signal: AbortSignal, progress: (packets: number, total: number) => void = () => {}
+  blob: Blob, signal: AbortSignal, progress: (packets: number, total: number) => void = () => {},
+  tags: MediaTags = {}
 ): Promise<RemuxResult> {
   signal.throwIfAborted(); checkSize(blob.size);
   const started = performance.now();
@@ -39,6 +49,11 @@ export async function remuxM4a(
     signal.throwIfAborted();
     const target = new BufferTarget();
     output = new Output({target, format: new Mp4OutputFormat({fastStart: 'reserve'})});
+    const metadata: MetadataTags = {};
+    if (tags.title) metadata.title = tags.title;
+    if (tags.artist) metadata.artist = tags.artist;
+    if (tags.cover?.data.byteLength) metadata.images = [{data: tags.cover.data, mimeType: tags.cover.mimeType, kind: 'coverFront'}];
+    if (metadata.title || metadata.artist || metadata.images) output.setMetadataTags(metadata);
     const source = new EncodedAudioPacketSource('aac');
     output.addAudioTrack(source, {maximumPacketCount: stats.packetCount});
     await output.start();

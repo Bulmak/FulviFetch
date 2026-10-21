@@ -1,10 +1,48 @@
-import {checkSize, DownloadFailure, extensionForMime, validateMagic, validateMediaUrl, validateRange} from './core.ts';
+import {checkSize, DownloadFailure, extensionForMime, validateImageUrl, validateMagic, validateMediaUrl, validateRange} from './core.ts';
 export interface Candidate {
   url: string; mime: string; title: string; videoId: string; itag: number; size?: number; client: string;
   audioTrack?: string;
+  artist?: string;
+  cover?: string;
   refresh?: (signal: AbortSignal) => Promise<Candidate>;
 }
 type Report = (message: string, data?: Record<string, string | number | boolean>) => void;
+
+// Tope de la carátula: es un extra pequeño, no un archivo de vídeo.
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+
+// Descarga la carátula del video. Devuelve undefined si no hay, si el servidor
+// no es el admitido o si la imagen es demasiado grande: la carátula nunca es
+// un motivo para fallar la descarga.
+export async function fetchImage(value: string | undefined, signal: AbortSignal): Promise<Uint8Array | undefined> {
+  if (!value) return undefined;
+  const url = validateImageUrl(value);
+  try {
+    const response = await fetch(url, {credentials: 'omit', referrerPolicy: 'no-referrer',
+      signal: AbortSignal.any([signal, AbortSignal.timeout(15000)])});
+    if (!response.ok) { await response.body?.cancel(); return undefined; }
+    const reader = response.body?.getReader();
+    if (!reader) return undefined;
+    const chunks: Uint8Array[] = [];
+    let total = 0;
+    try {
+      while (true) {
+        const part = await reader.read();
+        if (part.done) break;
+        total += part.value.length;
+        if (total > MAX_IMAGE_BYTES) { await reader.cancel(); return undefined; }
+        chunks.push(part.value);
+      }
+    } finally { reader.releaseLock(); }
+    const data = new Uint8Array(total);
+    let offset = 0;
+    for (const chunk of chunks) { data.set(chunk, offset); offset += chunk.length; }
+    return data;
+  } catch (error) {
+    signal.throwIfAborted();
+    return undefined;
+  }
+}
 
 export function validateRefreshedMedia(original: Candidate, fresh: Candidate, size: number): URL {
   const url = validateMediaUrl(fresh.url);

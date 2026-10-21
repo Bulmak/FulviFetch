@@ -93,3 +93,33 @@ test('Ajusta cabeceras iOS solo en peticiones propias y retira los manejadores a
   assert.equal(before.size, 0);
   assert.equal(sent.size, 0);
 });
+
+test('Extrae el autor y la carátula del video para guardarlos en el archivo', async t => {
+  t.mock.method(globalThis, 'fetch', async (input: string | URL | Request, init?: RequestInit) => {
+    const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url);
+    if (url.pathname.startsWith('/embed/')) return new Response('"VISITOR_DATA":"guest","INNERTUBE_CLIENT_VERSION":"2.20261019.00.00"');
+    const body = JSON.parse(init!.body as string);
+    if (body.context.client.clientName === 'VISIONOS') {
+      return Response.json({playabilityStatus: {status: 'UNPLAYABLE', reason: 'This video is not available'}, videoDetails: {videoId: id}});
+    }
+    return Response.json({
+      playabilityStatus: {status: 'OK'},
+      videoDetails: {videoId: id, title: 'Canción', author: 'Artista', lengthSeconds: '2',
+        thumbnail: {thumbnails: [
+          {url: 'https://i.ytimg.com/vi/abc/hqdefault.jpg', width: 480, height: 360},
+          {url: 'https://i.ytimg.com/vi/abc/maxresdefault.jpg', width: 1280, height: 720}
+        ]}},
+      streamingData: {expiresInSeconds: '3600', formats: [], adaptiveFormats: [{
+        itag: 140, mimeType: 'audio/mp4; codecs="mp4a.40.2"', bitrate: 128000, contentLength: '24',
+        audioQuality: 'AUDIO_QUALITY_MEDIUM', audioSampleRate: '44100', audioChannels: 2,
+        url: 'https://r1.googlevideo.com/videoplayback?clen=24'
+      }]}
+    });
+  });
+  const candidates = audioCandidates(id, new AbortController().signal, () => {});
+  try {
+    const {value: candidate} = await candidates.next();
+    assert.equal(candidate!.artist, 'Artista');
+    assert.equal(candidate!.cover, 'https://i.ytimg.com/vi/abc/maxresdefault.jpg');
+  } finally { await candidates.return(undefined); }
+});

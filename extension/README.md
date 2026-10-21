@@ -46,6 +46,9 @@ Se requiere Firefox 142 o posterior; se probó en Firefox 158.0 sobre Windows.
   descargar el video de la pestaña activa sin abrir el panel.
 - Se prefiere M4A/AAC: se reempaqueta localmente para mejorar su reproducción,
   conservando los paquetes AAC sin recodificar. WebM se guarda sin ese paso.
+- El M4A guardado lleva el título, el autor y la carátula del video. Los
+  metadatos se añaden al contenedor sin tocar los paquetes de audio: el
+  contenido y la duración son los mismos.
 - Transferencia por fragmentos, comprobación de rangos e integridad y cancelación.
 - Alternativa iOS si el primer cliente no ofrece audio; verificada con un video
   marcado para niños. No garantiza compatibilidad con todos esos videos.
@@ -89,7 +92,8 @@ fondo se descarga, la cola se restaura y continúa por su cuenta.
 
 Los permisos son `activeTab`, para leer el enlace al usar el botón o el atajo,
 `storage`, para mantener el estado, y `menus`, para el menú contextual. No se
-solicitan permisos para todas las webs.
+solicitan permisos para todas las webs. Los hosts son YouTube, el servidor de
+audio de Google, el de la API y `i.ytimg.com`, que sirve las miniaturas.
 
 ## Desarrollo
 

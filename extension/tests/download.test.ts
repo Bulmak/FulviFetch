@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {videoIdFromUrl, filenameFor, validateMediaUrl, checkSize, DownloadFailure, MAX_BYTES} from '../src/core.ts';
-import {downloadAudio} from '../src/media.ts';
+import {downloadAudio, fetchImage} from '../src/media.ts';
 const id = 'jNQXAC9IVRw';
 for (const url of [`https://www.youtube.com/watch?v=${id}&list=example`, `https://youtu.be/${id}?t=3`, `https://m.youtube.com/watch?v=${id}`, `https://www.youtube.com/shorts/${id}`]) {
   test(`Extrae un solo video: ${url}`, () => assert.equal(videoIdFromUrl(url), id));
@@ -112,4 +112,26 @@ test('Normaliza espacios Unicode del título que Firefox rechaza al guardar', ()
 test('Normalizar espacios conserva acentos y títulos en otros idiomas', () => {
   assert.equal(filenameFor('Canción\u00a0日本語', id, 'm4a'),
     'FulviFetch/Canción 日本語 [' + id + '].m4a');
+});
+
+test('La carátula solo se descarga de los servidores admitidos', async t => {
+  const image = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
+  t.mock.method(globalThis, 'fetch', async (input: string | URL | Request) => {
+    const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url);
+    assert.equal(url.hostname, 'i.ytimg.com');
+    return new Response(image, {headers: {'Content-Type': 'image/jpeg'}});
+  });
+  const data = await fetchImage('https://i.ytimg.com/vi/abc/hqdefault.jpg', new AbortController().signal);
+  assert.deepEqual(Array.from(data ?? []), Array.from(image));
+  await assert.rejects(fetchImage('https://otro-servidor.test/c.jpg', new AbortController().signal), {code: 'INVALID_IMAGE_URL'});
+  await assert.rejects(fetchImage('http://i.ytimg.com/vi/abc/hqdefault.jpg', new AbortController().signal), {code: 'INVALID_IMAGE_URL'});
+});
+
+test('Una carátula ausente no impide descargar el audio', async () => {
+  assert.equal(await fetchImage(undefined, new AbortController().signal), undefined);
+});
+
+test('Una carátula demasiado grande se descarta', async t => {
+  t.mock.method(globalThis, 'fetch', async () => new Response(new Uint8Array(3 * 1024 * 1024), {headers: {'Content-Type': 'image/jpeg'}}));
+  assert.equal(await fetchImage('https://i.ytimg.com/vi/abc/hqdefault.jpg', new AbortController().signal), undefined);
 });
