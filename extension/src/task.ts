@@ -28,6 +28,12 @@ export type Executor = (videoId: string, signal: AbortSignal, updates: TaskUpdat
 // Límite de descargas pendientes: evita que la cola crezca sin control.
 export const MAX_QUEUE = 20;
 
+// El identificador de un elemento termina en su número de secuencia.
+function sequenceOf(id: string): number {
+  const match = /-(\d+)$/.exec(id);
+  return match?.[1] ? Number(match[1]) : 0;
+}
+
 export class DownloadTask {
   private controller?: AbortController;
   private state: TaskState;
@@ -51,6 +57,9 @@ export class DownloadTask {
     if (!saved || saved.version !== this.version || !Array.isArray(saved.diagnostic?.events)) return;
     this.state = structuredClone(saved);
     this.pending = Array.isArray(saved.queue) ? saved.queue.map(item => ({...item})) : [];
+    // Los identificadores terminan en el número de secuencia: al restaurar hay
+    // que seguir desde el mayor para no repetir ninguno.
+    this.sequence = Math.max(this.sequence, ...this.pending.map(item => sequenceOf(item.id)));
     if (this.state.active) {
       // Firefox descargó el proceso de fondo: la tarea activa vuelve a la
       // cola para no perderla y el estado deja de fingir que sigue en curso.
@@ -88,9 +97,9 @@ export class DownloadTask {
 
   // Quita un elemento pendiente sin tocar la descarga en curso.
   remove(id: string) {
-    const before = this.pending.length;
-    this.pending = this.pending.filter(item => item.id !== id);
-    if (this.pending.length === before) return;
+    const index = this.pending.findIndex(item => item.id === id);
+    if (index < 0) return;
+    this.pending.splice(index, 1);
     this.syncQueue();
     this.publish();
   }

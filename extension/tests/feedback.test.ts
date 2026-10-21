@@ -10,9 +10,10 @@ test('Un enlace inválido pide revisar el enlace', () => {
   assert.equal(feedback.keepRunning, false);
 });
 
-test('Una descarga en curso no se presenta como un error del enlace', () => {
-  const feedback = feedbackFor(new DownloadFailure('BUSY', 'Ya hay una descarga en curso.'));
-  assert.equal(feedback.status, 'Ya hay una descarga en curso');
+test('Una cola llena no se presenta como un error del enlace', () => {
+  const feedback = feedbackFor(new DownloadFailure('BUSY', 'La cola admite hasta 20 descargas pendientes.'));
+  assert.equal(feedback.status, 'La cola está llena');
+  assert.equal(feedback.detail, 'La cola admite hasta 20 descargas pendientes.');
   assert.notEqual(feedback.status, 'Revisa el enlace');
   assert.equal(feedback.keepRunning, true);
 });

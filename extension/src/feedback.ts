@@ -12,8 +12,8 @@ export function feedbackFor(error: unknown): Feedback {
   if (error instanceof DownloadFailure) {
     if (error.code === 'BUSY') {
       return {
-        status: 'Ya hay una descarga en curso',
-        detail: 'Espera a que termine la otra descarga o cancélala desde este panel.',
+        status: 'La cola está llena',
+        detail: error.message,
         keepRunning: true
       };
     }
