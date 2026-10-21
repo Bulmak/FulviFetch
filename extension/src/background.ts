@@ -4,6 +4,7 @@ import {remuxM4a} from './remux.ts';
 import {DownloadFailure, extensionForMime, filenameFor} from './core.ts';
 import {DownloadTask, type TaskState, type TaskUpdates} from './task.ts';
 import {createThrottledWriter} from './writer.ts';
+import {requestFromUrl, type VideoRequest} from './requests.ts';
 
 // Los estados intermedios se agrupan: escribir en cada fragmento saturaba el
 // almacenamiento y el distintivo del icono. El último estado siempre se guarda.
@@ -114,6 +115,34 @@ async function transfer(videoId: string, signal: AbortSignal, updates: TaskUpdat
 
 const task = new DownloadTask(__APP_VERSION__, transfer, publish);
 const ready = browser.storage.session.get('task').then(saved => task.restore(saved.task as TaskState | undefined));
+
+// Encola un video desde el menú contextual o el atajo de teclado.
+function enqueue(request?: VideoRequest) {
+  if (!request) return;
+  try {
+    task.submit(request.url, request.label);
+  } catch (error) {
+    // La cola está llena: se avisa en el icono y en el panel.
+    void browser.action.setBadgeText({text: '!'});
+    void browser.action.setBadgeBackgroundColor({color: '#b43b54'});
+    console.warn('FulviFetch:', error instanceof Error ? error.message : error);
+  }
+}
+browser.menus.onClicked.addListener((info, tab) => {
+  // Sobre un enlace se encola el enlace; sobre la página, la página. El
+  // título de la pestaña solo describe al video cuando es la propia página.
+  const fromLink = Boolean(info.linkUrl);
+  const request = requestFromUrl(fromLink ? info.linkUrl : info.pageUrl, fromLink ? undefined : tab?.title);
+  void ready.then(() => enqueue(request));
+});
+browser.commands.onCommand.addListener(command => {
+  if (command !== 'download-active-tab') return;
+  void browser.tabs.query({active: true, currentWindow: true}).then(([tab]) => {
+    const request = requestFromUrl(tab?.url, tab?.title);
+    void ready.then(() => enqueue(request));
+  });
+});
+
 // Register at module load so Firefox can wake this event page for popup messages.
 browser.runtime.onMessage.addListener((message: unknown, sender) => {
   if (sender.id !== browser.runtime.id || !sender.url?.startsWith(browser.runtime.getURL('index.html'))) return false;

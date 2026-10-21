@@ -40,6 +40,10 @@ Se requiere Firefox 142 o posterior; se probó en Firefox 158.0 sobre Windows.
 - La cola se guarda en la memoria de la sesión del navegador: si Firefox
   descarga el proceso de fondo, la cola se conserva y se reanuda sola.
 - Detección del video de la pestaña activa al abrir el panel o pulsar su botón.
+- Menú contextual: "FulviFetch: descargar el audio" sobre cualquier enlace que
+  apunte a un video de YouTube, y sobre la página de un video.
+- Atajo de teclado (`Ctrl+Shift+Y`, ajustable en los ajustes de Firefox) para
+  descargar el video de la pestaña activa sin abrir el panel.
 - Se prefiere M4A/AAC: se reempaqueta localmente para mejorar su reproducción,
   conservando los paquetes AAC sin recodificar. WebM se guarda sin ese paso.
 - Transferencia por fragmentos, comprobación de rangos e integridad y cancelación.
@@ -83,8 +87,9 @@ El estado se guarda ordenadamente en `storage.session` para recuperar la
 interfaz. La cola de descargas viaja en el mismo estado: si el proceso de
 fondo se descarga, la cola se restaura y continúa por su cuenta.
 
-Los permisos nuevos son `activeTab`, para leer el enlace al usar el botón,
-y `storage`, para mantener el estado. No se solicitan permisos para todas las webs.
+Los permisos son `activeTab`, para leer el enlace al usar el botón o el atajo,
+`storage`, para mantener el estado, y `menus`, para el menú contextual. No se
+solicitan permisos para todas las webs.
 
 ## Desarrollo
 
