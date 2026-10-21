@@ -120,13 +120,20 @@ browser.runtime.onMessage.addListener((message: unknown, sender) => {
   if (!message || typeof message !== 'object' || !('type' in message)) return false;
   if (message.type === 'GET_TASK') return ready.then(() => task.snapshot());
   if (message.type === 'CANCEL_TASK') return ready.then(() => { task.cancel(); return task.snapshot(); });
+  if (message.type === 'CLEAR_QUEUE') return ready.then(() => { task.clear(); return task.snapshot(); });
+  if (message.type === 'REMOVE_QUEUED' && 'id' in message && typeof message.id === 'string') {
+    const id = message.id;
+    return ready.then(() => { task.remove(id); return task.snapshot(); });
+  }
   if (message.type === 'START_TASK' && 'url' in message && typeof message.url === 'string' && message.url.length <= 4096) {
     const input = message.url;
+    const label = 'label' in message && typeof message.label === 'string' ? message.label.slice(0, 200) : undefined;
     return ready.then(() => {
       // Accept promptly; the task is owned by this background context, not the sender.
       // Our own request events and progress storage writes provide activity. Network
       // waits are bounded to 15/20 s, below Firefox's normal 30 s idle timeout.
-      void task.start(input);
+      // An invalid link or a full queue throws here and reaches the panel.
+      task.submit(input, label);
       return task.snapshot();
     });
   }

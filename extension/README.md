@@ -33,7 +33,12 @@ Se requiere Firefox 142 o posterior; se probó en Firefox 158.0 sobre Windows.
 
 ## Funciones y límites
 
-- Un video y una descarga activa para toda la extensión, aunque haya varios paneles.
+- Una descarga activa a la vez y hasta 20 en cola. Los enlaces que se envían
+  mientras hay una descarga en curso se descargan después, en orden, sin
+  cerrar el panel. Cada elemento de la cola se puede quitar y la cola se puede
+  vaciar sin detener la descarga en curso.
+- La cola se guarda en la memoria de la sesión del navegador: si Firefox
+  descarga el proceso de fondo, la cola se conserva y se reanuda sola.
 - Detección del video de la pestaña activa al abrir el panel o pulsar su botón.
 - Se prefiere M4A/AAC: se reempaqueta localmente para mejorar su reproducción,
   conservando los paquetes AAC sin recodificar. WebM se guarda sin ese paso.
@@ -57,7 +62,7 @@ Se requiere Firefox 142 o posterior; se probó en Firefox 158.0 sobre Windows.
 ## Arquitectura del popup
 
 - `src/app.ts`: interfaz y mensajes de iniciar, consultar o cancelar.
-- `src/task.ts`: estado de una tarea, exclusión de descargas simultáneas y cancelación.
+- `src/task.ts`: estado de la tarea, cola de descargas y cancelación.
 - `src/background.ts`: extracción, descarga, guardado y actualización del icono.
 - `src/extractor.ts`: contexto de visitante, consultas a YouTube y cabeceras.
 - `src/media.ts`: transferencia por fragmentos y verificación del archivo.
@@ -74,7 +79,9 @@ de fondo, no a la vida del popup. Las peticiones generan eventos de red y sus
 esperas están limitadas a 15/20 segundos, por debajo del tiempo normal de
 inactividad de Firefox (30 segundos). No se usa una
 pestaña oculta ni un temporizador permanente para mantenerlo despierto.
-El estado se guarda ordenadamente en `storage.session` para recuperar la interfaz.
+El estado se guarda ordenadamente en `storage.session` para recuperar la
+interfaz. La cola de descargas viaja en el mismo estado: si el proceso de
+fondo se descarga, la cola se restaura y continúa por su cuenta.
 
 Los permisos nuevos son `activeTab`, para leer el enlace al usar el botón,
 y `storage`, para mantener el estado. No se solicitan permisos para todas las webs.

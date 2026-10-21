@@ -12,8 +12,12 @@
       <div class="field-heading"><label for="url">Enlace de YouTube</label><button id="current-video" type="button">Usar video actual</button></div>
       <input id="url" type="url" required autocomplete="off" placeholder="Pega el enlace de un video">
       <p id="track-title" hidden></p>
-      <div class="actions"><button id="download" type="submit">Descargar audio <span aria-hidden="true">↓</span></button><button id="cancel" type="button" disabled>Cancelar</button></div>
+      <div class="actions"><button id="download" type="submit"><span id="download-label">Descargar audio</span> <span aria-hidden="true">↓</span></button><button id="cancel" type="button" disabled>Cancelar</button></div>
     </form>
+    <section id="queue-section" hidden>
+      <div class="queue-heading"><h2>En cola (<span id="queue-count">0</span>)</h2><button id="clear-queue" type="button">Vaciar</button></div>
+      <ul id="queue-list"></ul>
+    </section>
     <section id="result" aria-live="polite" aria-atomic="false" data-result="idle">
       <div class="status-heading"><span class="status-dot" aria-hidden="true"></span><h2 id="status">Conectando…</h2></div>
       <p id="detail">Recuperando el estado de la descarga.</p>

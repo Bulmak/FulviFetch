@@ -17,14 +17,17 @@ let revision = -1;
 let lastState: TaskState | undefined;
 let userEdited = false;
 let starting = false;
+let currentLabel = '';
 element('build-version').textContent = __APP_VERSION__;
 
 function render(state: TaskState) {
   if (state.version !== __APP_VERSION__ || state.revision < revision) return;
   revision = state.revision; lastState = state;
   starting = false;
-  start.disabled = state.active; cancel.disabled = !state.active;
-  input.disabled = state.active; current.disabled = state.active;
+  // La cola admite varios enlaces: el campo y el botón siguen disponibles.
+  start.disabled = false; cancel.disabled = !state.active;
+  input.disabled = false; current.disabled = false;
+  element('download-label').textContent = state.active ? 'Añadir a la cola' : 'Descargar audio';
   status.textContent = state.status; detail.textContent = state.detail;
   track.textContent = state.title; track.hidden = !state.title;
   progress.hidden = !state.active;
@@ -32,7 +35,29 @@ function render(state: TaskState) {
   else progress.removeAttribute('value');
   diagnostic.textContent = JSON.stringify(state.diagnostic, null, 2);
   element('result').dataset.result = state.diagnostic.result;
-  if (state.url && (!userEdited || state.active)) input.value = state.url;
+  if (state.url && !userEdited) input.value = state.url;
+  renderQueue(state);
+}
+function renderQueue(state: TaskState) {
+  const section = element<HTMLElement>('queue-section');
+  const list = element<HTMLUListElement>('queue-list');
+  section.hidden = state.queue.length === 0;
+  element('queue-count').textContent = String(state.queue.length);
+  list.replaceChildren(...state.queue.map(item => {
+    const row = document.createElement('li');
+    const name = document.createElement('span');
+    name.textContent = item.label || item.videoId;
+    name.title = item.url;
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.textContent = 'Quitar';
+    remove.setAttribute('aria-label', 'Quitar de la cola: ' + (item.label || item.videoId));
+    remove.addEventListener('click', () => {
+      void browser.runtime.sendMessage({type: 'REMOVE_QUEUED', id: item.id}).catch(() => undefined);
+    });
+    row.append(name, remove);
+    return row;
+  }));
 }
 function showError(error: unknown): Feedback {
   const feedback = feedbackFor(error);
@@ -51,7 +76,8 @@ async function useCurrentVideo(automatic = false) {
     if (automatic && (userEdited || input.value)) return;
     input.value = 'https://www.youtube.com/watch?v=' + id;
     if (!automatic) userEdited = true;
-    track.textContent = tab?.title?.replace(/ - YouTube$/, '') || 'Video de la pestaña actual';
+    currentLabel = tab?.title?.replace(/ - YouTube$/, '') || '';
+    track.textContent = currentLabel || 'Video de la pestaña actual';
     track.hidden = false;
   } catch {
     if (!automatic) {
@@ -60,7 +86,7 @@ async function useCurrentVideo(automatic = false) {
     }
   }
 }
-input.addEventListener('input', () => { userEdited = true; track.hidden = true; });
+input.addEventListener('input', () => { userEdited = true; currentLabel = ''; track.hidden = true; });
 current.addEventListener('click', () => {
   void useCurrentVideo().catch(() => {
     status.textContent = 'No se pudo leer la pestaña';
@@ -69,12 +95,14 @@ current.addEventListener('click', () => {
 });
 form.addEventListener('submit', event => {
   event.preventDefault();
-  if (lastState?.active || starting) return;
+  if (starting) return;
   try { videoIdFromUrl(input.value); } catch (error) { showError(error); input.focus(); return; }
   starting = true; start.disabled = true; input.disabled = true; current.disabled = true;
   status.textContent = 'Preparando la descarga';
+  const message: {type: string; url: string; label?: string} = {type: 'START_TASK', url: input.value};
+  if (currentLabel) message.label = currentLabel;
   // The background accepts the job; progress arrives through session storage.
-  void browser.runtime.sendMessage({type: 'START_TASK', url: input.value}).then((state: TaskState) => render(state)).catch(async error => {
+  void browser.runtime.sendMessage(message).then((state: TaskState) => render(state)).catch(async error => {
     starting = false;
     const feedback = showError(error);
     if (feedback.keepRunning) {
@@ -85,6 +113,9 @@ form.addEventListener('submit', event => {
     }
     start.disabled = false; input.disabled = false; current.disabled = false;
   });
+});
+element('clear-queue').addEventListener('click', () => {
+  void browser.runtime.sendMessage({type: 'CLEAR_QUEUE'}).catch(() => undefined);
 });
 cancel.addEventListener('click', () => {
   cancel.disabled = true;

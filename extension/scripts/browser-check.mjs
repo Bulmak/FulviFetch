@@ -170,6 +170,23 @@ try {
   await popup('document.getElementById("url").value = "https://example.com/video"; document.getElementById("download-form").requestSubmit();');
   assert.equal(await popup('return document.getElementById("status").textContent'), 'Revisa el enlace');
   console.log('Enlace inválido rechazado en el popup.');
+  // Cola: dos enlaces seguidos se descargan en orden, sin cerrar el panel.
+  const queueIds = ['jNQXAC9IVRw', 'aqz-KE-bpKQ'];
+  for (const queueId of queueIds) {
+    await popup('document.getElementById("url").value = ' + JSON.stringify('https://www.youtube.com/watch?v=' + queueId) + '; document.getElementById("download-form").requestSubmit();');
+  }
+  const queued = await snapshot();
+  assert.equal(queued.queue.length, 1, 'El segundo enlace no quedó en cola: ' + JSON.stringify(queued.queue));
+  console.log('Cola: ' + queued.queue.length + ' pendiente(s) tras enviar dos enlaces.');
+  await driver.wait(async () => {
+    const state = await snapshot();
+    return !state.active && state.queue.length === 0;
+  }, 300000, 'La cola no terminó.', 1000);
+  const savedQueue = await popup('return browser.downloads.search({state:"complete"}).then(items => items.map(item => item.filename))');
+  for (const queueId of queueIds) {
+    assert.ok(savedQueue.some(name => name.includes('[' + queueId + ']')), 'No se guardó el video en cola ' + queueId);
+  }
+  console.log('Cola: los dos videos en cola se guardaron.');
   await popup('document.getElementById("url").value = "https://www.youtube.com/watch?v=M7lc1UVf-VE"; document.getElementById("download-form").requestSubmit();');
   await driver.wait(async () => (await snapshot()).active, 5000);
   await popup('document.getElementById("cancel").click();');
