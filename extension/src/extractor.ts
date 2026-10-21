@@ -1,6 +1,6 @@
 import {Innertube, Log, Constants} from 'youtubei.js/cf-worker';
 import {DownloadFailure, extensionForMime, validateMediaUrl} from './core.ts';
-import type {Candidate} from './media';
+import type {Candidate} from './media.ts';
 Log.setLevel(Log.Level.NONE);
 interface PlaybackContext { videoId: string; visitorData: string; clientVersion: string; }
 export type Report = (message: string, data?: Record<string, string | number | boolean>) => void;

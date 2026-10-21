@@ -13,7 +13,7 @@ export function videoIdFromUrl(value: string): string {
   let id: string | null = null;
   if (url.hostname === 'youtu.be' || url.hostname === 'www.youtu.be') {
     const parts = url.pathname.split('/').filter(Boolean);
-    if (parts.length === 1) id = parts[0];
+    if (parts.length === 1) id = parts[0] ?? null;
   } else if (['youtube.com', 'www.youtube.com', 'm.youtube.com', 'music.youtube.com'].includes(url.hostname)) {
     if (url.pathname === '/watch') id = url.searchParams.get('v');
     else id = /^\/(?:shorts|embed)\/([A-Za-z0-9_-]{11})\/?$/.exec(url.pathname)?.[1] ?? null;
@@ -29,7 +29,7 @@ export function validateMediaUrl(value: string): URL {
   return url;
 }
 export function extensionForMime(mime: string): 'm4a' | 'webm' {
-  const base = mime.split(';')[0].trim().toLowerCase();
+  const base = (mime.split(';')[0] ?? '').trim().toLowerCase();
   if (base === 'audio/mp4') return 'm4a';
   if (base === 'audio/webm') return 'webm';
   throw new DownloadFailure('UNSUPPORTED_FORMAT', 'El formato de audio no está admitido en esta prueba.');

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {videoIdFromUrl, filenameFor, validateMediaUrl, checkSize, MAX_BYTES} from '../src/core.ts';
+import {videoIdFromUrl, filenameFor, validateMediaUrl, checkSize, DownloadFailure, MAX_BYTES} from '../src/core.ts';
 import {downloadAudio} from '../src/media.ts';
 const id = 'jNQXAC9IVRw';
 for (const url of [`https://www.youtube.com/watch?v=${id}&list=example`, `https://youtu.be/${id}?t=3`, `https://m.youtube.com/watch?v=${id}`, `https://www.youtube.com/shorts/${id}`]) {
@@ -25,7 +25,7 @@ const candidate = {url: 'https://r1.googlevideo.com/videoplayback', mime: 'audio
 function audioBytes(size = candidate.size) { const data = new Uint8Array(size); data.set([0, 0, 0, 24, 102, 116, 121, 112, 77, 52, 65, 32]); return data; }
 test('Descarga varios fragmentos íntegros sin enviar credenciales', async t => {
   const original = audioBytes(); const ranges: string[] = [];
-  t.mock.method(globalThis, 'fetch', async (_url, init) => {
+  t.mock.method(globalThis, 'fetch', async (_url: string | URL | Request, init?: RequestInit) => {
     assert.equal(init?.credentials, 'omit');
     const range = new Headers(init?.headers).get('Range')!; ranges.push(range);
     const [, first, last] = /^bytes=(\d+)-(\d+)$/.exec(range)!;
@@ -58,7 +58,7 @@ test('Cancelar antes de descargar evita peticiones de audio', async t => {
 test('Un 403 renueva la URL y reanuda el mismo fragmento sin duplicar bytes', async t => {
   const original = audioBytes(); let denied = false; let refreshes = 0; const requests: number[] = [];
   const refreshed = {...candidate, url: candidate.url + '?renewed=1'};
-  t.mock.method(globalThis, 'fetch', async (url, init) => {
+  t.mock.method(globalThis, 'fetch', async (url: string | URL | Request, init?: RequestInit) => {
     const [, first, last] = /^bytes=(\d+)-(\d+)$/.exec(new Headers(init?.headers).get('Range')!)!;
     const start = Number(first), end = Number(last); requests.push(start);
     if (start > 0 && !denied) { denied = true; return new Response(null, {status: 403}); }
@@ -73,7 +73,8 @@ test('Un 403 renueva la URL y reanuda el mismo fragmento sin duplicar bytes', as
 test('El rechazo persistente tiene un límite de dos renovaciones', async t => {
   let renewals = 0;
   const request = t.mock.method(globalThis, 'fetch', async () => new Response(null, {status: 403}));
-  await assert.rejects(downloadAudio({...candidate, refresh: async () => { renewals++; return candidate; }}, new AbortController().signal, () => {}), error => {
+  await assert.rejects(downloadAudio({...candidate, refresh: async () => { renewals++; return candidate; }}, new AbortController().signal, () => {}), (error: unknown) => {
+    assert.ok(error instanceof DownloadFailure);
     assert.equal(error.code, 'MEDIA_HTTP'); assert.equal(error.details.status, 403); assert.equal(error.details.offset, 0); assert.equal(error.details.refreshes, 2); return true;
   });
   assert.equal(renewals, 2); assert.equal(request.mock.callCount(), 3);

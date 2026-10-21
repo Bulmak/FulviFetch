@@ -24,6 +24,7 @@ async function packets(blob: Blob) {
   const input = new Input({formats: [MP4], source: new BlobSource(blob)});
   try {
     const track = (await input.getAudioTracks())[0];
+    assert.ok(track);
     const payloads = [];
     for await (const packet of new EncodedPacketSink(track).packets()) {
       payloads.push({data: Array.from(packet.data), timestamp: packet.timestamp, duration: packet.duration});

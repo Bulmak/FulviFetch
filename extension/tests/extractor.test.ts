@@ -8,7 +8,7 @@ const id = 'mXY6yjM2m84';
 test('Usa iOS cuando VISIONOS no permite reproducir y conserva el ajuste al renovar', async t => {
   const clients: string[] = [];
   let generation = 0;
-  t.mock.method(globalThis, 'fetch', async (input, init) => {
+  t.mock.method(globalThis, 'fetch', async (input: string | URL | Request, init?: RequestInit) => {
     const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url);
     assert.equal(init?.credentials, 'omit');
     assert.equal(new Headers(init?.headers).has('Cookie'), false);
@@ -52,7 +52,7 @@ test('Usa iOS cuando VISIONOS no permite reproducir y conserva el ajuste al reno
 
 test('Clasifica un video no disponible después de agotar los cinco clientes', async t => {
   let calls = 0;
-  t.mock.method(globalThis, 'fetch', async (input) => {
+  t.mock.method(globalThis, 'fetch', async (input: string | URL | Request) => {
     const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url);
     if (url.pathname.startsWith('/embed/')) return new Response('', {status: 404});
     calls++;
@@ -73,7 +73,8 @@ test('Ajusta cabeceras iOS solo en peticiones propias y retira los manejadores a
   t.after(() => { if (previous) Object.defineProperty(globalThis, 'browser', previous); else Reflect.deleteProperty(globalThis, 'browser'); });
   const reports: unknown[] = [];
   const remove = await installRequestHeaders((message, data) => reports.push({message, ...data}));
-  const [listener] = before, [finalHeaders] = sent;
+  const listener = [...before][0]; const finalHeaders = [...sent][0];
+  assert.ok(listener); assert.ok(finalHeaders);
   const details = {
     requestId: 'test', originUrl: 'moz-extension://test/background.js',
     url: 'https://r1.googlevideo.com/videoplayback?c=IOS',

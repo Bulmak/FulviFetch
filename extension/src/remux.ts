@@ -23,10 +23,10 @@ export async function remuxM4a(
   signal.addEventListener('abort', abort, {once: true});
   try {
     const tracks = await input.getAudioTracks();
-    if (tracks.length !== 1 || (await input.getVideoTracks()).length) {
+    const track = tracks[0];
+    if (!track || tracks.length !== 1 || (await input.getVideoTracks()).length) {
       throw new DownloadFailure('REMUX_UNSUPPORTED', 'El archivo no contiene una única pista de audio admitida.');
     }
-    const track = tracks[0];
     if (await track.getCodec() !== 'aac') {
       throw new DownloadFailure('REMUX_UNSUPPORTED', 'Esta versión prepara M4A con audio AAC.');
     }

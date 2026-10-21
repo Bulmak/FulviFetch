@@ -45,7 +45,7 @@ async function useCurrentVideo(automatic = false) {
     if (automatic && (userEdited || input.value)) return;
     input.value = 'https://www.youtube.com/watch?v=' + id;
     if (!automatic) userEdited = true;
-    track.textContent = tab.title?.replace(/ - YouTube$/, '') || 'Video de la pestaña actual';
+    track.textContent = tab?.title?.replace(/ - YouTube$/, '') || 'Video de la pestaña actual';
     track.hidden = false;
   } catch {
     if (!automatic) {

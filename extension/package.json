@@ -1,10 +1,11 @@
 {
   "name": "fulvifetch",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc --noEmit && vite build && node scripts/notices.mjs",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.test.json",
+    "build": "npm run typecheck && vite build && node scripts/notices.mjs",
     "test": "node --experimental-strip-types --test tests/*.test.ts",
     "lint:extension": "web-ext lint --source-dir dist --warnings-as-errors",
     "package": "npm run build && web-ext build --source-dir dist --artifacts-dir artifacts --overwrite-dest"
@@ -15,6 +16,7 @@
   },
   "devDependencies": {
     "@types/firefox-webext-browser": "143.0.1",
+    "@types/node": "26.6.5",
     "selenium-webdriver": "4.51.0",
     "typescript": "7.0.2",
     "vite": "8.3.4",
