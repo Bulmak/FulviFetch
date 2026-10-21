@@ -116,15 +116,30 @@ test('Normalizar espacios conserva acentos y títulos en otros idiomas', () => {
 
 test('La carátula solo se descarga de los servidores admitidos', async t => {
   const image = new Uint8Array([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]);
+  const requested: string[] = [];
   t.mock.method(globalThis, 'fetch', async (input: string | URL | Request) => {
     const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url);
-    assert.equal(url.hostname, 'i.ytimg.com');
+    requested.push(url.hostname);
     return new Response(image, {headers: {'Content-Type': 'image/jpeg'}});
   });
   const data = await fetchImage('https://i.ytimg.com/vi/abc/hqdefault.jpg', new AbortController().signal);
   assert.deepEqual(Array.from(data ?? []), Array.from(image));
-  await assert.rejects(fetchImage('https://otro-servidor.test/c.jpg', new AbortController().signal), {code: 'INVALID_IMAGE_URL'});
-  await assert.rejects(fetchImage('http://i.ytimg.com/vi/abc/hqdefault.jpg', new AbortController().signal), {code: 'INVALID_IMAGE_URL'});
+  assert.deepEqual(requested, ['i.ytimg.com']);
+});
+
+test('Una carátula con una dirección no admitida no puede fallar la descarga', async t => {
+  const requested: string[] = [];
+  t.mock.method(globalThis, 'fetch', async (input: string | URL | Request) => {
+    const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url);
+    requested.push(url.hostname);
+    return new Response(new Uint8Array(8));
+  });
+  // La carátula es un extra: una dirección no admitida no se descarga y no
+  // tumba la descarga, que ya está terminada cuando se pide.
+  assert.equal(await fetchImage('https://otro-servidor.test/c.jpg', new AbortController().signal), undefined);
+  assert.equal(await fetchImage('http://i.ytimg.com/vi/abc/hqdefault.jpg', new AbortController().signal), undefined);
+  assert.equal(await fetchImage('https://i.ytimg.com.otro.test/c.jpg', new AbortController().signal), undefined);
+  assert.deepEqual(requested, []);
 });
 
 test('Una carátula ausente no impide descargar el audio', async () => {

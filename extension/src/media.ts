@@ -16,8 +16,11 @@ const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
 // un motivo para fallar la descarga.
 export async function fetchImage(value: string | undefined, signal: AbortSignal): Promise<Uint8Array | undefined> {
   if (!value) return undefined;
-  const url = validateImageUrl(value);
   try {
+    // La validación va dentro del try a propósito: una carátula con una
+    // dirección no admitida no puede fallar la descarga, que ya está
+    // terminada cuando se pide.
+    const url = validateImageUrl(value);
     const response = await fetch(url, {credentials: 'omit', referrerPolicy: 'no-referrer',
       signal: AbortSignal.any([signal, AbortSignal.timeout(15000)])});
     if (!response.ok) { await response.body?.cancel(); return undefined; }
