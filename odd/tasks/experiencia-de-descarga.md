@@ -139,9 +139,29 @@ por unidad de trabajo. Lo eligió la persona usuaria.
   decisión clara del usuario y encaja con los metadatos de T3.
 - Verificación por unidad: `npm run typecheck`, `npm test`, `npm run build` y
   `npm run lint:extension` en verde al cerrar cada commit. La suite pasó de
-  57 a 80 pruebas.
+  57 a 93 pruebas.
 - T1 lleva además una comprobación de cola en `scripts/browser-check.mjs`:
   envía dos enlaces seguidos y comprueba que el segundo queda en cola y que
   los dos videos se guardan.
+- Verificador independiente de T1: S1, S2 y S3 cumplidas, sin bloqueantes. Sus
+  dos avisos se corrigieron en `de8d419` (identificadores repetidos en la cola
+  y mensaje de cola llena).
+- Revisión nativa de la rama completa: **aprobada** y acuse registrado. Dos
+  hallazgos severos se corrigieron antes de aprobarla:
+  - `R3-cover-invalid-url` (CRITICAL): la validación de la carátula estaba
+    fuera del bloque de protección y una dirección no admitida tumbaba la
+    descarga. Corregido en `b79be8a`.
+  - `R3-ci-forbid-only` (BLOCKER): la CI no impedía un `test.only` commiteado.
+    Corregido en `b79be8a` con `scripts/check-only.ts`.
+  - `R4-persistence-not-awaited` (CRITICAL): la cola y el estado final se
+    escribían sin esperar. Corregido en `fdd00df`.
+- Avisos de legibilidad que la revisión deja como trabajo posterior, no
+  bloqueantes: constantes con nombre para los números mágicos (200 ms, 200
+  caracteres, 15 s); agrupar los parámetros posicionales de
+  `audioCandidates`, `remuxM4a` y `filenameFor`; `validateImageUrl` duplica
+  comprobaciones de `validateMediaUrl`; `fetchImage` duplica el streaming de
+  `downloadAudio`; `compareFormats` calcula el rango dos veces;
+  `DownloadTask.restore` hace demasiadas cosas a la vez; el campo `idle`
+  guarda esperas y no un estado; y `START_TASK` pide el estado dos veces.
 - Pendiente de una prueba en un Firefox real: la comprobación de navegador no
   se puede ejecutar en el equipo donde se escribió el código.
