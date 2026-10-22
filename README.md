@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="extension/public/icons/icon-128.png" width="112" height="112" alt="Logo de FulviFetch">
+  <img src="media/zorro-frontal-v2/icons/icon-256.png" width="112" height="112" alt="Logo de FulviFetch: zorro chilote con auriculares">
 </p>
 
 # FulviFetch
@@ -31,7 +31,7 @@ Requiere **Firefox 142 o posterior** en escritorio. Se ha probado en Windows.
 4. Elige **Instalar complemento desde archivo…** y selecciona el `.xpi`.
 5. Confirma la instalación y fija FulviFetch a la barra de herramientas.
 
-El código de `main` corresponde a la **0.3.5**, preparada para su envío a la
+El código de `main` corresponde a la **0.3.6**, preparada para su envío a la
 tienda oficial de Mozilla. Mientras no esté publicada allí, puedes instalar el
 `.xpi` firmado disponible en Releases y actualizarlo manualmente.
 
