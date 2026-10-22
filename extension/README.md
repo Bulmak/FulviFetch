@@ -21,7 +21,7 @@ El paquete ya está preparado en este computador.
 8. Las preferencias están en el menú de extensiones → **Administrar la extensión
    → Preferencias** (o `about:addons` → el engranaje de FulviFetch).
 
-También puedes seleccionar `artifacts/fulvifetch-0.4.0.zip` desde el
+También puedes seleccionar `artifacts/fulvifetch-0.4.0.xpi` desde el
 diálogo de carga temporal. Comprueba que el panel muestre **0.4.0**.
 
 El archivo se guarda en `FulviFetch`, dentro de las descargas de Firefox.
@@ -29,8 +29,9 @@ Puede aparecer un diálogo de guardado según tu configuración. No necesitas
 reproducir el video. El botón muestra un indicador durante la descarga y una
 marca al terminar; el panel recupera el progreso o el último resultado.
 
-La instalación temporal desaparece al reiniciar Firefox. La instalación
-permanente mediante un XPI firmado por Mozilla sigue pendiente.
+La instalación temporal desaparece al reiniciar Firefox. Para que sea
+permanente hay dos caminos, descritos abajo: la firma de Mozilla (AMO) o
+Firefox ESR.
 Se requiere Firefox 142 o posterior; se probó en Firefox 158.0 sobre Windows.
 
 ## Funciones y límites
@@ -106,11 +107,25 @@ audio de Google, el de la API y `i.ytimg.com`, que sirve las miniaturas.
 
 ## Instalación permanente
 
-Firefox exige que todo complemento esté firmado por Mozilla. La firma se pide en
-addons.mozilla.org (AMO) y hay dos canales: **listado** (aparece en el
-catálogo) y **auto-distribuido** (unlisted, no aparece pero se firma igual).
-Este proyecto usa el auto-distribuido: es para uso propio o de un equipo
-reducido.
+Firefox exige que todo complemento esté firmado por Mozilla. No hay forma de
+salir de eso en la versión de release: la comprobación de firma está
+compilada dentro del navegador y no se puede desactivar desde `about:config`.
+Por eso hay dos caminos, y conviene entender la diferencia antes de elegir.
+
+| | Con firma de Mozilla | Sin pasar por Mozilla |
+| --- | --- | --- |
+| Dónde se instala | Cualquier Firefox | Firefox ESR |
+| Cuenta y revisión | Sí | No |
+| Instalar el archivo `.xpi` | Sí, firmado | Sí, sin firmar |
+| Firma activada | Siempre | Desactivada en ese navegador |
+| Actualizaciones | AMO las reparte | A mano |
+
+### Con firma de Mozilla (recomendado)
+
+La firma se pide en addons.mozilla.org (AMO) y hay dos canales: **listado**
+(aparece en el catálogo) y **auto-distribuido** (unlisted, no aparece pero se
+firma igual). Este proyecto usa el auto-distribuido: es para uso propio o de
+un equipo reducido.
 
 1. Creá la cuenta en <https://addons.mozilla.org/developers/>.
 2. En el Developer Hub, **Submit a New Add-on** → **On your own** (unlisted).
@@ -127,7 +142,7 @@ reducido.
 
    El XPI firmado queda en `artifacts/signed/`.
 5. Instálalo de forma permanente: `about:addons` → engranaje → **Instalar
-   complemento desde el archivo…** → el ZIP de `artifacts/signed/`.
+   complemento desde el archivo…** → el XPI de `artifacts/signed/`.
 
 Para actualizar, subí la versión en `package.json` y en
 `public/manifest.json`, y volvé a firmar: AMO reparte las actualizaciones
@@ -152,6 +167,24 @@ Lo que hay que tener en cuenta:
 - **Legal**: los Términos de YouTube prohíben descargar fuera de sus
   mecanismos. Decidí eso antes de pedir la firma.
 
+### Sin pasar por Mozilla (Firefox ESR)
+
+Firefox ESR, Developer Edition y Nightly traen la comprobación de firma
+desactivable: en `about:config`, `xpinstall.signatures.required` pasa a
+`false` y los complementos sin firmar se instalan de forma permanente.
+
+1. Instalá Firefox ESR desde <https://www.mozilla.org/firefox/enterprise/>.
+   Convive con tu Firefox normal, con su propio perfil.
+2. En ESR, `about:config` → `xpinstall.signatures.required` → **false**.
+3. `npm.cmd run package` genera `artifacts/fulvifetch-<versión>.xpi`.
+4. `about:addons` → engranaje → **Instalar complemento desde el archivo…** →
+   ese `.xpi`.
+
+Sin cuenta, sin revisión y sin esperas. El costo: es una build de Firefox
+distinta a la de todos los días, con los parches de seguridad agrupados en
+vez de semanales, y queda una comprobación de firma desactivada **en ese
+navegador**. El complemento necesita el ID del manifiesto, que ya tiene.
+
 ## Desarrollo
 
 Node.js se necesita para desarrollar, no para utilizar el paquete generado.
@@ -169,9 +202,10 @@ npm.cmd run lint:extension
 `npm run typecheck` comprueba los tipos del código **y** de las pruebas: los
 archivos de `tests/` también se verifican, no solo los de `src/`.
 
-`dist/` contiene los archivos compilados y `artifacts/` el ZIP de instalación
-temporal. Ambos están excluidos de Git y se generan desde el código fuente.
-No se usa Vite como servidor: Firefox carga archivos estáticos empaquetados.
+`dist/` contiene los archivos compilados y `artifacts/` el XPI de instalación
+(`fulvifetch-<versión>.xpi`). Ambos están excluidos de Git y se generan desde
+el código fuente. No se usa Vite como servidor: Firefox carga archivos
+estáticos empaquetados.
 
 ## Integración continua
 

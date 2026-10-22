@@ -8,7 +8,7 @@
     "build": "npm run typecheck && vite build && node scripts/notices.mjs",
     "test": "node --experimental-strip-types scripts/check-only.ts && node --experimental-strip-types --test tests/*.test.ts",
     "lint:extension": "web-ext lint --source-dir dist --warnings-as-errors",
-    "package": "npm run build && web-ext build --source-dir dist --artifacts-dir artifacts --overwrite-dest",
+    "package": "npm run build && node scripts/package.mjs",
     "sign": "node scripts/sign.mjs",
     "source": "node scripts/source-archive.mjs"
   },

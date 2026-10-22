@@ -6,6 +6,7 @@ const {Builder, By, until} = await import('selenium-webdriver');
 const {default: firefox} = await import('selenium-webdriver/firefox.js');
 import assert from 'node:assert/strict';
 import {mkdir, readdir, readFile, writeFile, cp, stat} from 'node:fs/promises';
+import {existsSync} from 'node:fs';
 import {resolve} from 'node:path';
 import {spawnSync} from 'node:child_process';
 import {videoIdFromUrl} from '../src/core.ts';
@@ -25,7 +26,12 @@ if (!addonId) throw new Error('El manifiesto no declara browser_specific_setting
 const widgetBase = widgetBaseFor(addonId);
 const buttonId = widgetBase + '-BAP';
 const widgetId = widgetBase + '-browser-action';
-let archive = resolve(root, 'artifacts', 'fulvifetch-' + manifest.version + '.zip');
+// El instalador de Firefox exige un XPI: por eso el paquete se genera con
+// esa extensión y no como ZIP.
+let archive = resolve(root, 'artifacts', 'fulvifetch-' + manifest.version + '.xpi');
+if (!existsSync(archive)) {
+  throw new Error('No existe ' + archive + '. Ejecutá antes: npm run package');
+}
 if (delay || deniedOffset !== null) {
   const source = resolve(output, 'instrumented-popup');
   await cp(resolve(root, 'dist'), source, {recursive: true});
@@ -41,9 +47,9 @@ if (delay || deniedOffset !== null) {
   ].join('\n');
   await writeFile(resolve(source, 'background.js'), prefix + '\n' + await readFile(resolve(source, 'background.js'), 'utf8'));
   const cli = resolve(root, 'node_modules/web-ext/bin/web-ext.js');
-  const build = spawnSync(process.execPath, [cli, 'build', '--source-dir', source, '--artifacts-dir', resolve(output, 'instrumented-package'), '--overwrite-dest'], {encoding: 'utf8', windowsHide: true});
+  const build = spawnSync(process.execPath, [cli, 'build', '--source-dir', source, '--artifacts-dir', resolve(output, 'instrumented-package'), '--filename', 'fulvifetch-' + manifest.version + '.xpi', '--overwrite-dest'], {encoding: 'utf8', windowsHide: true});
   if (build.status !== 0) throw new Error(build.stdout + build.stderr);
-  archive = resolve(output, 'instrumented-package', 'fulvifetch-' + manifest.version + '.zip');
+  archive = resolve(output, 'instrumented-package', 'fulvifetch-' + manifest.version + '.xpi');
 }
 const repoTool = name => resolve(root, '..', '.local', 'tools', name, process.platform === 'win32' ? name + '.exe' : name);
 const firefoxCandidates = process.platform === 'win32'

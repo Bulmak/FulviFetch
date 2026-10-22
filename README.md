@@ -57,13 +57,19 @@ pruebas. La CI (`.github/workflows/ci.yml`) ejecuta en cada push y pull request
 la comprobación de tipos, las pruebas, la compilación y la validación con
 `web-ext`.
 
-El empaquetado genera `extension/dist/` y el ZIP en `extension/artifacts/`.
+El empaquetado genera `extension/dist/` y el XPI en `extension/artifacts/`.
 
 ## Instalación permanente
 
-Firefox solo admite complementos firmados por Mozilla. La firma se pide en
-addons.mozilla.org con el canal **auto-distribuido** (unlisted): no aparece en
-el catálogo, pero se instala de forma permanente como cualquier otro.
+Firefox solo admite complementos firmados por Mozilla, y la comprobación de
+firma está compilada dentro del navegador de release: no se puede desactivar.
+Hay dos caminos:
 
-Los pasos, la firma con `npm run sign` y el paquete de fuentes que pide Mozilla
-están en [extension/README.md](extension/README.md#instalación-permanente).
+- **Con firma de Mozilla**: se pide en addons.mozilla.org con el canal
+  **auto-distribuido** (unlisted). No aparece en el catálogo, pero se instala
+  de forma permanente como cualquier otro.
+- **Sin pasar por Mozilla**: Firefox ESR permite desactivar la comprobación de
+  firma e instalar el XPI directamente.
+
+Los pasos de los dos están en
+[extension/README.md](extension/README.md#instalación-permanente).
