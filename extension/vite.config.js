@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 import {readFileSync} from 'node:fs';
 const packageInfo = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8'));
 export default {

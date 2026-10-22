@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: MPL-2.0
 param(
   [Parameter(Mandatory = $true)][string]$Source,
   [string]$Destination = "$PSScriptRoot\mejorados"

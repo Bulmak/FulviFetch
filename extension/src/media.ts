@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 import {checkSize, DownloadFailure, extensionForMime, validateMagic, validateMediaUrl, validateRange} from './core.ts';
 export interface Candidate {
   url: string; mime: string; title: string; videoId: string; itag: number; size?: number; client: string;

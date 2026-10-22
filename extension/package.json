@@ -2,6 +2,7 @@
   "name": "fulvifetch",
   "version": "0.3.4",
   "private": true,
+  "license": "MPL-2.0",
   "type": "module",
   "scripts": {
     "build": "tsc --noEmit && vite build && node scripts/notices.mjs",

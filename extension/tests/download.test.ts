@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {videoIdFromUrl, filenameFor, validateMediaUrl, checkSize, MAX_BYTES} from '../src/core.ts';

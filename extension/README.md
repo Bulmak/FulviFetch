@@ -136,6 +136,9 @@ Selenium busca puertos en `127.0.0.1`; no requiere abrir el firewall a redes pú
 
 ## Dependencias y referencias
 
+El código propio de FulviFetch está disponible bajo [MPL-2.0](LICENSE).
+Las dependencias mantienen sus licencias originales.
+
 Se incluyen YouTube.js 18.2.0 y Mediabunny 1.61.6. La compilación reúne sus licencias
 en `dist/THIRD_PARTY_NOTICES.txt`, accesible desde el enlace Licencias del pie.
 Mediabunny se distribuye bajo MPL-2.0, sin modificar su código fuente. Se incluye

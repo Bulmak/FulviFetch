@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 // Browser checks use only a disposable profile. Test fault injection never enters dist/.
 import portprober from 'selenium-webdriver/net/portprober.js';
 const findFreePort = portprober.findFreePort;

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 import {audioCandidates, installRequestHeaders} from './extractor';
 import {downloadAudio} from './media';
 import {remuxM4a} from './remux';

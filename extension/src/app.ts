@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 import './style.css';
 import {videoIdFromUrl} from './core';
 import type {TaskState} from './task';

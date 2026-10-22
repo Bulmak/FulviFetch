@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 import {
   Input, MP4, BlobSource, EncodedPacketSink,
   Output, Mp4OutputFormat, BufferTarget, EncodedAudioPacketSource

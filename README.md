@@ -92,3 +92,13 @@ y las pruebas de navegador.
 
 Las licencias de las dependencias incluidas se pueden consultar desde el enlace
 **Licencias** del panel de FulviFetch.
+
+## Licencia
+
+El código propio de FulviFetch se distribuye bajo la
+[Mozilla Public License 2.0 (MPL-2.0)](LICENSE).
+Puedes usarlo, estudiarlo, modificarlo y distribuirlo, también con fines comerciales.
+Si distribuyes modificaciones de archivos cubiertos por esta licencia, debes
+poner su código fuente a disposición de los destinatarios bajo MPL-2.0.
+
+Las dependencias conservan sus respectivas licencias y avisos de autoría.

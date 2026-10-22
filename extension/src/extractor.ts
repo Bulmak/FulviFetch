@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 import {Innertube, Log, Constants} from 'youtubei.js/cf-worker';
 import {DownloadFailure, extensionForMime, validateMediaUrl} from './core.ts';
 import type {Candidate} from './media';

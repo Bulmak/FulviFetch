@@ -1,5 +1,14 @@
+// SPDX-License-Identifier: MPL-2.0
 import {readFile, writeFile} from 'node:fs/promises';
+const project = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
+const projectLicense = await readFile(new URL('../LICENSE', import.meta.url), 'utf8');
+await writeFile(new URL('../dist/LICENSE', import.meta.url), projectLicense);
 const notices = [
+  '# FulviFetch ' + project.version + '\n\n'
+    + 'El código propio de FulviFetch está disponible bajo MPL-2.0.\n'
+    + 'This Source Code Form is subject to the terms of the Mozilla Public License, v. 2.0.\n'
+    + 'A copy is included in LICENSE and at https://mozilla.org/MPL/2.0/.\n'
+    + 'Source code and build instructions: https://github.com/Bulmak/FulviFetch\n\n---\n\n',
   '# Dependencias incluidas\n\nYouTube.js (youtubei.js), MIT. https://github.com/LuanRT/YouTube.js\n',
   await readFile(new URL('../node_modules/youtubei.js/LICENSE', import.meta.url), 'utf8'),
   '\n\n---\n\nDependencias de YouTube.js incluidas por el empaquetador: ver sus avisos a continuación.\n'

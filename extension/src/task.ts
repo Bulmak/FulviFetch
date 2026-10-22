@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MPL-2.0
 import {DownloadFailure, videoIdFromUrl} from './core.ts';
 
 export type TaskResult = 'idle' | 'running' | 'complete' | 'failed' | 'cancelled';
