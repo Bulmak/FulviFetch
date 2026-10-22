@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "FulviFetch",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "description": "Descarga audio de videos públicos de YouTube directamente a tu equipo. Sin analítica.",
   "permissions": [
     "downloads",

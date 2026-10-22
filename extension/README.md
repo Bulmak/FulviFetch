@@ -1,7 +1,7 @@
 # FulviFetch: prototipo para Firefox
 
 Extensión independiente para descargar el audio original de videos públicos de
-YouTube. La versión 0.3.4 se usa desde un popup en la barra de herramientas.
+YouTube. La versión 0.3.5 se usa desde un popup en la barra de herramientas.
 
 Descarga el audio directamente a tu equipo. No utiliza analítica.
 
@@ -20,8 +20,8 @@ El paquete ya está preparado en este computador.
    Para pegar otro enlace, pulsa **O pega el link aquí** y después **Descargar**.
 7. Puedes cerrar y volver a abrir el panel: la tarea continúa en segundo plano.
 
-También puedes seleccionar `artifacts/fulvifetch-0.3.4.zip` desde el
-diálogo de carga temporal. Comprueba que el panel muestre **0.3.4**.
+También puedes seleccionar `artifacts/fulvifetch-0.3.5.zip` desde el
+diálogo de carga temporal. Comprueba que el panel muestre **0.3.5**.
 
 El archivo se guarda directamente en la carpeta de descargas de Firefox.
 El nombre utiliza solo el título y la extensión, sin añadir el identificador del video.
@@ -29,9 +29,9 @@ Puede aparecer un diálogo de guardado según tu configuración. No necesitas
 reproducir el video. El botón muestra un indicador durante la descarga y una
 marca al terminar; el panel recupera el progreso o el último resultado.
 
-La instalación temporal desaparece al reiniciar Firefox. La versión publicada
-0.3.2 tiene un XPI firmado por Mozilla; esta prueba 0.3.4 todavía debe firmarse
-para distribuirla como actualización permanente.
+La instalación temporal desaparece al reiniciar Firefox. La versión 0.3.5 está
+preparada para su envío a la tienda oficial de Mozilla; todavía requiere su
+revisión y firma para distribuirla como actualización permanente.
 Se requiere Firefox 142 o posterior; se probó en Firefox 158.0 sobre Windows.
 
 ## Funciones y límites

@@ -31,9 +31,9 @@ Requiere **Firefox 142 o posterior** en escritorio. Se ha probado en Windows.
 4. Elige **Instalar complemento desde archivo…** y selecciona el `.xpi`.
 5. Confirma la instalación y fija FulviFetch a la barra de herramientas.
 
-La versión firmada publicada es la **0.3.2**. El código de `main` corresponde a la
-**0.3.4**, preparada para solicitar una nueva firma. Las actualizaciones se
-instalan manualmente mediante el nuevo `.xpi`.
+El código de `main` corresponde a la **0.3.5**, preparada para su envío a la
+tienda oficial de Mozilla. Mientras no esté publicada allí, puedes instalar el
+`.xpi` firmado disponible en Releases y actualizarlo manualmente.
 
 ## Cómo usarlo
 
